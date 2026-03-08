@@ -16,7 +16,7 @@ public class UpdateNotificationService {
 
     public void sendNotifications(LinkUpdateRequest request) {
         String message =
-                String.format("🔔 Update detected!\n\nLink: %s\nDescription: %s", request.url(), request.description());
+                String.format("🔔 Update detected!%n%nLink: %s%nDescription: %s", request.url(), request.description());
 
         for (Long chatId : request.tgChatIds()) {
             try {

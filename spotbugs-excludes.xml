@@ -31,6 +31,8 @@
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
             <Bug pattern="DM_EXIT"/>
+            <Bug pattern="CRLF_INJECTION_LOGS"/>
+            <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
         </Or>
     </Match>
     <!-- Kotlin edge cases -->

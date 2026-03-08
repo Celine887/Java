@@ -51,7 +51,7 @@ public class LinkUpdateService {
             return;
         }
 
-        Instant remoteUpdated = lastUpdate.get();
+        Instant remoteUpdated = lastUpdate.orElseThrow();
         if (link.lastUpdatedAt() == null || remoteUpdated.isAfter(link.lastUpdatedAt())) {
             log.info("Link updated: url={}", link.url());
             notifyUpdate(link, "Link updated");

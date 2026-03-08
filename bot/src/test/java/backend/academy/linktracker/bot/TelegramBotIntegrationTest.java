@@ -47,6 +47,11 @@ class TelegramBotIntegrationTest implements WithAssertions {
     @Autowired
     TelegramProperties telegramProperties;
 
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() {
+        com.github.tomakehurst.wiremock.client.WireMock.reset();
+    }
+
     @AfterEach
     void clearUpdatesListener() {
         telegramBot.removeGetUpdatesListener();

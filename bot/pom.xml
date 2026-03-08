@@ -218,6 +218,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>backend.academy.linktracker.bot.BotApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -6,6 +6,8 @@ spring:
     name: scrapper
   config:
     import: optional:file:.env[.properties]
+  profiles:
+    active: grpc
 
 app:
   scheduler:
@@ -14,6 +16,10 @@ app:
     force-check-delay: 10s
   bot-client:
     base-url: http://localhost:8080
+  bot:
+    grpc:
+      host: localhost
+      port: 9090
   github-client:
     base-url: https://api.github.com
   stackoverflow-client:

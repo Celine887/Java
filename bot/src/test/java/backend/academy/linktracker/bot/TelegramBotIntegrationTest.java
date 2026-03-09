@@ -48,8 +48,10 @@ class TelegramBotIntegrationTest implements WithAssertions {
     TelegramProperties telegramProperties;
 
     @org.junit.jupiter.api.BeforeEach
-    void setUp() {
+    void setUp() throws InterruptedException {
+        telegramBot.removeGetUpdatesListener();
         com.github.tomakehurst.wiremock.client.WireMock.reset();
+        Thread.sleep(100); // Give time for background requests to stop
     }
 
     @AfterEach

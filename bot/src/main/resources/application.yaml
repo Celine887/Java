@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: bot
+  grpc:
+    server:
+      port: 9090
 
 app:
   telegram:

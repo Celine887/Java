@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.service;
 
-import backend.academy.linktracker.scrapper.client.BotClient;
+import backend.academy.linktracker.scrapper.client.UpdateClient;
 import backend.academy.linktracker.scrapper.client.dto.LinkUpdateRequest;
 import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
@@ -19,7 +19,7 @@ public class LinkUpdateService {
 
     private final List<LinkChecker> checkers;
     private final LinkRepository linkRepository;
-    private final BotClient botClient;
+    private final UpdateClient updateClient;
 
     public void updateAllLinks() {
         log.debug("Starting link update check");
@@ -69,7 +69,7 @@ public class LinkUpdateService {
         }
 
         LinkUpdateRequest request = new LinkUpdateRequest(generateId(link.url()), link.url(), description, chatIds);
-        botClient.sendUpdate(request);
+        updateClient.sendUpdate(request);
     }
 
     private Long generateId(String url) {

@@ -3,13 +3,15 @@ package backend.academy.linktracker.scrapper.client;
 import backend.academy.linktracker.scrapper.client.dto.LinkUpdateRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
+@Profile("!grpc")
 @Slf4j
-public class BotClient {
+public class BotClient implements UpdateClient {
 
     private final RestClient restClient;
 
@@ -17,9 +19,10 @@ public class BotClient {
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
     }
 
+    @Override
     public void sendUpdate(LinkUpdateRequest request) {
         try {
-            log.info("Sending update to bot: url={}, chatIds={}", request.url(), request.tgChatIds());
+            log.info("Sending update to bot via REST: url={}, chatIds={}", request.url(), request.tgChatIds());
             restClient
                     .post()
                     .uri("/updates")

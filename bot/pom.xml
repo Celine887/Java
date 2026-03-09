@@ -11,6 +11,10 @@
     <artifactId>bot</artifactId>
     <packaging>jar</packaging>
 
+    <properties>
+        <skipChmod>false</skipChmod>
+    </properties>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -222,6 +226,29 @@
                             <goal>compile</goal>
                             <goal>compile-custom</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Fix executable permissions on Linux -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>fix-protoc-permissions</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>chmod</executable>
+                            <arguments>
+                                <argument>+x</argument>
+                                <argument>${project.build.directory}/protoc-plugins/protoc-gen-grpc-java-${grpc.version}-${os.detected.classifier}.exe</argument>
+                            </arguments>
+                            <skip>${skipChmod}</skip>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

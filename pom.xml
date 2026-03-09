@@ -75,6 +75,7 @@
         <palantir-java-format.version>2.86.0</palantir-java-format.version>
         <pmd.version>7.21.0</pmd.version>
         <protobuf-maven-plugin.version>0.6.1</protobuf-maven-plugin.version>
+        <os-maven-plugin.version>1.7.1</os-maven-plugin.version>
         <spotbugs-findsecbugs-plugin.version>1.14.0</spotbugs-findsecbugs-plugin.version>
         <spotbugs-maven-plugin.version>${spotbugs.version}.2</spotbugs-maven-plugin.version>
         <spotbugs-slf4j-plugin.version>1.5.0</spotbugs-slf4j-plugin.version>
@@ -216,7 +217,7 @@
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.1</version>
+                <version>${os-maven-plugin.version}</version>
             </extension>
         </extensions>
 

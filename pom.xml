@@ -304,6 +304,11 @@
                         <rulesets>
                             <ruleset>pmd.xml</ruleset>
                         </rulesets>
+                        <excludeRoots>
+                            <excludeRoot>target/generated-sources</excludeRoot>
+                            <excludeRoot>src/main/java-generated</excludeRoot>
+                            <excludeRoot>src/main/java-generated-grpc</excludeRoot>
+                        </excludeRoots>
                     </configuration>
                     <dependencies>
                         <dependency>

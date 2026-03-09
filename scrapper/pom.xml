@@ -208,12 +208,14 @@
                 <executions>
                     <execution>
                         <id>compile-protobuf</id>
+                        <phase>generate-sources</phase>
                         <goals>
                             <goal>compile</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>compile-grpc</id>
+                        <phase>process-sources</phase>
                         <goals>
                             <goal>compile-custom</goal>
                         </goals>
@@ -231,13 +233,13 @@
                 <executions>
                     <execution>
                         <id>fix-grpc-permissions</id>
-                        <phase>generate-sources</phase>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <target>
-                                <chmod file="${project.build.directory}/protoc-plugins/protoc-gen-grpc-java-${grpc.version}-${os.detected.classifier}.exe" perm="ugo+rx" failonerror="false"/>
+                                <chmod dir="${project.build.directory}/protoc-plugins" perm="ugo+rx" includes="**/*.exe" failonerror="false"/>
                             </target>
                         </configuration>
                     </execution>

@@ -246,13 +246,14 @@
                     <version>${protobuf-maven-plugin.version}</version>
                     <configuration>
                         <protoc>${protobuf-java.version}</protoc>
-                        <protocPlugins>
-                            <protocPlugin kind="binary-maven">
+                        <binaryMavenPlugins>
+                            <binaryMavenPlugin>
                                 <groupId>io.grpc</groupId>
                                 <artifactId>protoc-gen-grpc-java</artifactId>
                                 <version>${grpc.version}</version>
-                            </protocPlugin>
-                        </protocPlugins>
+                            </binaryMavenPlugin>
+                        </binaryMavenPlugins>
+                        <failOnMissingSources>false</failOnMissingSources>
                     </configuration>
                 </plugin>
                 <plugin>

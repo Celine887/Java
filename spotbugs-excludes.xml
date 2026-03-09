@@ -70,4 +70,13 @@
     <Match>
         <Package name="~.*\.jmh_generated"/>
     </Match>
+
+    <!-- Generated protobuf/gRPC files -->
+    <Match>
+        <Or>
+            <Package name="~.*\.grpc"/>
+            <Source name="~.*/java-generated/.*"/>
+            <Source name="~.*/java-generated-grpc/.*"/>
+        </Or>
+    </Match>
 </FindBugsFilter>

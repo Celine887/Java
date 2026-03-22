@@ -8,8 +8,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 @SpringBootTest
-@ActiveProfiles("test")
-@TestPropertySource(properties = {"app.scheduler.enabled=false"})
 public abstract class BaseIntegrationTest {
 
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17-alpine");

@@ -7,9 +7,27 @@ spring:
   config:
     import: optional:file:.env[.properties]
   profiles:
-    active: grpc
+    active: grpc,jpa
+  datasource:
+    url: jdbc:postgresql://localhost:5432/link_tracker
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
 
 app:
+  database:
+    access-type: jpa
   scheduler:
     enabled: true
     interval: 60s

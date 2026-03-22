@@ -1,171 +1,280 @@
-# LinkTracker
+# Link Tracker
 
-Telegram-бот для отслеживания изменений на GitHub и StackOverflow.
+Приложение для отслеживания обновлений ссылок GitHub и StackOverflow через Telegram бота.
 
-## Архитектура
+## Технологии
 
-Проект состоит из двух микросервисов:
+- Java 21
+- Spring Boot 3.4.1
+- PostgreSQL 16
+- Liquibase (миграции БД)
+- Spring Data JPA / JDBC
+- Telegram Bot API
+- gRPC
+- Docker & Docker Compose
+- Testcontainers
+- Maven 3.9.11
 
-- **Bot** (порт 8080) — Telegram-бот для взаимодействия с пользователями
-- **Scrapper** (порт 8081) — сервис для периодической проверки обновлений ссылок
+## Требования
 
-## Как запустить
+- Java 21+
+- Maven 3.9.11+
+- Docker & Docker Compose
+- Telegram Bot Token
 
-### 1. Получить токен
+## Быстрый старт
 
-Создайте бота через [@BotFather](https://t.me/BotFather) в Telegram командой `/newbot` и скопируйте токен.
+### 1. Клонирование репозитория
 
-### 2. Настроить токен
+```bash
+git clone <repository-url>
+cd link-tracker
+```
+
+### 2. Настройка переменных окружения
 
 Создайте файл `.env` в корне проекта:
 
-```
-TELEGRAM_TOKEN="ваш_токен"
+```properties
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+TELEGRAM_BOT_NAME=your_bot_name
 ```
 
-### 3. Собрать проект
+### 3. Запуск PostgreSQL
 
 ```bash
-./mvnw clean package -DskipTests
+docker-compose up -d
 ```
 
-Для Windows с Java 24:
+Это запустит PostgreSQL на порту 5432 с базой данных `link_tracker`.
 
-```powershell
-mvnw clean package -DskipTests "-Denforcer.skip=true"
-```
-
-### 4. Запустить сервисы
-
-В отдельных терминалах:
+### 4. Сборка проекта
 
 ```bash
-# Scrapper
-./mvnw spring-boot:run -pl scrapper
-
-# Bot
-./mvnw spring-boot:run -pl bot
+mvn clean install
 ```
 
-Или через jar-файлы:
+### 5. Запуск приложений
+
+#### Запуск Scrapper (бэкенд)
 
 ```bash
-java -jar scrapper/target/scrapper-0.0.1.jar
-java -jar bot/target/bot-0.0.1.jar
+mvn spring-boot:run -pl scrapper
 ```
 
-## Команды бота
+Scrapper будет доступен на `http://localhost:8081`
 
-- `/start` — регистрация в системе
-- `/help` — список команд
-- `/track` — начать отслеживание ссылки (диалог с запросом URL и тегов)
-- `/untrack <url>` — прекратить отслеживание ссылки
-- `/list` — показать все отслеживаемые ссылки
-- `/list <tag>` — показать ссылки с определенным тегом
-- `/cancel` — отменить текущую операцию
-- `/skip` — пропустить добавление тегов
-
-## Поддерживаемые ссылки
-
-- GitHub репозитории: `https://github.com/owner/repo`
-- StackOverflow вопросы: `https://stackoverflow.com/questions/123456/title`
-
-## REST API
-
-### Scrapper API (порт 8081)
+#### Запуск Bot (Telegram бот)
 
 ```bash
-# Зарегистрировать чат
-POST /tg-chat/{id}
-
-# Добавить ссылку
-POST /links
-Headers: Tg-Chat-Id: {chatId}
-Body: {"url": "...", "tags": ["tag1", "tag2"]}
-
-# Получить список ссылок
-GET /links?tag={tag}
-Headers: Tg-Chat-Id: {chatId}
-
-# Удалить ссылку
-DELETE /links
-Headers: Tg-Chat-Id: {chatId}
-Body: {"url": "..."}
-
-# Удалить чат
-DELETE /tg-chat/{id}
+mvn spring-boot:run -pl bot
 ```
 
-### Bot API (порт 8080)
+Bot будет доступен на `http://localhost:8080`
 
-```bash
-# Отправить уведомление об обновлении
-POST /updates
-Body: {"id": 1, "url": "...", "description": "...", "tgChatIds": [123]}
+## Конфигурация
+
+### Выбор способа работы с БД
+
+В файле `scrapper/src/main/resources/application.yaml` можно настроить способ доступа к БД:
+
+```yaml
+app:
+  database:
+    access-type: jpa  # или jdbc, или memory
 ```
 
-## Тестирование
+Доступные варианты:
+- `jpa` - использование Spring Data JPA (ORM)
+- `jdbc` - использование чистого JDBC (raw SQL)
+- `memory` - in-memory хранилище (для разработки)
 
-Используйте скрипт для тестирования API:
+### Настройка базы данных
 
-```powershell
-powershell -ExecutionPolicy Bypass -File test-api.ps1
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/link_tracker
+    username: postgres
+    password: postgres
 ```
 
-Swagger UI:
+### Настройка планировщика
 
-- Scrapper: http://localhost:8081/swagger-ui.html
-- Bot: http://localhost:8080/swagger-ui.html
-
-## Архитектурные паттерны
-
-- **Command Pattern** — команды бота
-- **Repository Pattern** — работа с данными
-- **Strategy Pattern** — проверка разных типов ссылок (GitHub/StackOverflow)
-- **State Machine** — диалог для команды /track
-- **Dependency Injection** — Spring IoC
+```yaml
+app:
+  scheduler:
+    enabled: true
+    interval: 60s  # интервал проверки обновлений
+```
 
 ## Структура проекта
 
 ```
-bot/
-├── command/          # Команды бота (Command Pattern)
-├── service/          # Бизнес-логика, State Machine
-├── repository/       # In-memory хранилище
-├── controller/       # REST API для получения уведомлений
-└── model/            # Модели данных
-
-scrapper/
-├── controller/       # REST API для управления ссылками
-├── service/          # Бизнес-логика, валидация
-│   └── checker/      # Strategy Pattern для проверки ссылок
-├── repository/       # In-memory хранилище
-├── scheduler/        # Периодическая проверка обновлений
-├── client/           # HTTP клиенты (GitHub, StackOverflow, Bot)
-├── model/            # Модели данных
-└── exception/        # Кастомные исключения
+link-tracker/
+├── bot/                    # Telegram бот
+│   └── src/
+│       ├── main/
+│       └── test/
+├── scrapper/              # Бэкенд сервис
+│   └── src/
+│       ├── main/
+│       │   ├── java/
+│       │   └── resources/
+│       │       └── db/
+│       │           └── changelog/  # Liquibase миграции
+│       └── test/
+├── migrations/            # SQL миграции (корневая папка)
+├── docker-compose.yml     # Docker Compose конфигурация
+└── pom.xml               # Maven конфигурация
 ```
 
-## Особенности реализации
+## Миграции базы данных
 
-- **State Machine** для диалогового взаимодействия при добавлении ссылок
-- **Планировщик** проверяет обновления каждые 10 секунд (настраивается в application.yaml)
-- **Валидация** URL через регулярные выражения
-- **Теги** для группировки и фильтрации ссылок
-- **Кастомные исключения** для бизнес-логики (ChatNotFoundException, LinkNotFoundException и др.)
-- **In-memory хранилище** на основе ConcurrentHashMap
-- **HTTP клиенты** для интеграции с внешними API
+Миграции выполняются автоматически при запуске приложения через Liquibase.
 
-## SOLID принципы
+Файлы миграций находятся в:
+- `scrapper/src/main/resources/db/changelog/`
+- `migrations/` (корневая папка проекта)
 
-Проект следует принципам SOLID и GRASP (оценка 9.5/10). Подробности в [SOLID_IMPROVEMENTS.md](SOLID_IMPROVEMENTS.md).
+### Схема базы данных
 
-## Стек технологий
+Основные таблицы:
+- `chats` - зарегистрированные пользователи
+- `links` - отслеживаемые ссылки
+- `tags` - теги для ссылок
+- `link_chat` - связь пользователей и ссылок
+- `link_tag` - связь ссылок и тегов
 
-- Java 24
-- Spring Boot 4.0.2
-- Maven 3.9.11
-- Telegram Bot API (pengrad)
-- Lombok
-- Validation API
+## API
 
+### Scrapper API
+
+#### Регистрация чата
+```http
+POST /tg-chat/{id}
+```
+
+#### Удаление чата
+```http
+DELETE /tg-chat/{id}
+```
+
+#### Получение всех ссылок
+```http
+GET /links
+Header: Tg-Chat-Id: {chatId}
+```
+
+#### Добавление ссылки
+```http
+POST /links
+Header: Tg-Chat-Id: {chatId}
+Content-Type: application/json
+
+{
+  "url": "https://github.com/user/repo",
+  "tags": ["java", "spring"]
+}
+```
+
+#### Удаление ссылки
+```http
+DELETE /links
+Header: Tg-Chat-Id: {chatId}
+Content-Type: application/json
+
+{
+  "url": "https://github.com/user/repo"
+}
+```
+
+## Тестирование
+
+### Запуск всех тестов
+
+```bash
+mvn test
+```
+
+### Запуск тестов конкретного модуля
+
+```bash
+mvn test -pl scrapper
+mvn test -pl bot
+```
+
+### Запуск конкретного теста
+
+```bash
+mvn test -Dtest=JdbcRepositoryTest
+mvn test -Dtest=JpaRepositoryTest
+```
+
+Тесты используют Testcontainers для автоматического запуска PostgreSQL в Docker.
+
+## Команды бота
+
+- `/start` - начать работу с ботом
+- `/help` - показать справку
+- `/track` - добавить ссылку для отслеживания
+- `/untrack` - удалить ссылку из отслеживания
+- `/list` - показать все отслеживаемые ссылки
+
+## Поддерживаемые ссылки
+
+- GitHub репозитории: `https://github.com/user/repo`
+- StackOverflow вопросы: `https://stackoverflow.com/questions/{id}`
+
+## Разработка
+
+### Запуск из IDE
+
+1. Запустите PostgreSQL через Docker Compose
+2. Запустите `ScrapperApplication` (порт 8081)
+3. Запустите `BotApplication` (порт 8080)
+
+### Переключение между JDBC и JPA
+
+Измените в `application.yaml`:
+
+```yaml
+app:
+  database:
+    access-type: jdbc  # или jpa
+```
+
+Перезапустите приложение.
+
+## Troubleshooting
+
+### База данных не запускается
+
+Проверьте, что Docker запущен:
+```bash
+docker ps
+```
+
+Перезапустите контейнер:
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+### Ошибка подключения к БД
+
+Убедитесь, что PostgreSQL запущен и доступен на порту 5432:
+```bash
+docker-compose ps
+```
+
+### Тесты падают
+
+Убедитесь, что Docker запущен (для Testcontainers):
+```bash
+docker ps
+```
+
+## Лицензия
+
+Этот проект создан в образовательных целях.

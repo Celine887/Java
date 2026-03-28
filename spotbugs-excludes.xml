@@ -79,4 +79,10 @@
             <Source name="~.*/java-generated-grpc/.*"/>
         </Or>
     </Match>
+
+    <!-- Spring JdbcTemplate manages PreparedStatement lifecycle automatically -->
+    <Match>
+        <Class name="backend.academy.linktracker.scrapper.repository.jdbc.JdbcLinkRepositoryImpl"/>
+        <Bug pattern="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE"/>
+    </Match>
 </FindBugsFilter>

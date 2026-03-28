@@ -2,7 +2,6 @@ package backend.academy.linktracker.scrapper.repository.jdbc;
 
 import backend.academy.linktracker.scrapper.model.Link;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -129,9 +128,6 @@ public class JdbcLinkRepositoryImpl implements LinkRepository {
             """, (rs, rowNum) -> rs.getLong("chat_id"), url);
     }
 
-    @SuppressFBWarnings(
-            value = "OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE",
-            justification = "PreparedStatement is managed by Spring JdbcTemplate")
     private Long findOrCreateLink(Link link) {
         try {
             return jdbcTemplate.queryForObject("SELECT id FROM links WHERE url = ?", Long.class, link.url());
@@ -165,9 +161,6 @@ public class JdbcLinkRepositoryImpl implements LinkRepository {
         }
     }
 
-    @SuppressFBWarnings(
-            value = "OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE",
-            justification = "PreparedStatement is managed by Spring JdbcTemplate")
     private Long findOrCreateTag(String tagName) {
         try {
             return jdbcTemplate.queryForObject("SELECT id FROM tags WHERE name = ?", Long.class, tagName);

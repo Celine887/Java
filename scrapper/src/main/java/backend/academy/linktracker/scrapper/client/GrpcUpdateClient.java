@@ -8,15 +8,16 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
 @Profile("grpc")
-@Slf4j
 public class GrpcUpdateClient implements UpdateClient {
+    private static final Logger log = LoggerFactory.getLogger(GrpcUpdateClient.class);
 
     @Value("${app.bot.grpc.host:localhost}")
     private String botHost;

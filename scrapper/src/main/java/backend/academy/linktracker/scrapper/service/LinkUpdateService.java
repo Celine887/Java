@@ -8,18 +8,23 @@ import backend.academy.linktracker.scrapper.service.checker.LinkChecker;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class LinkUpdateService {
+    private static final Logger log = LoggerFactory.getLogger(LinkUpdateService.class);
 
     private final List<LinkChecker> checkers;
     private final LinkRepository linkRepository;
     private final UpdateClient updateClient;
+
+    public LinkUpdateService(List<LinkChecker> checkers, LinkRepository linkRepository, UpdateClient updateClient) {
+        this.checkers = checkers;
+        this.linkRepository = linkRepository;
+        this.updateClient = updateClient;
+    }
 
     public void updateAllLinks() {
         log.debug("Starting link update check");

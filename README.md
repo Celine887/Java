@@ -151,22 +151,26 @@ link-tracker/
 ### Scrapper API
 
 #### Регистрация чата
+
 ```http
 POST /tg-chat/{id}
 ```
 
 #### Удаление чата
+
 ```http
 DELETE /tg-chat/{id}
 ```
 
 #### Получение всех ссылок
+
 ```http
 GET /links
 Header: Tg-Chat-Id: {chatId}
 ```
 
 #### Добавление ссылки
+
 ```http
 POST /links
 Header: Tg-Chat-Id: {chatId}
@@ -179,6 +183,7 @@ Content-Type: application/json
 ```
 
 #### Удаление ссылки
+
 ```http
 DELETE /links
 Header: Tg-Chat-Id: {chatId}
@@ -251,11 +256,13 @@ app:
 ### База данных не запускается
 
 Проверьте, что Docker запущен:
+
 ```bash
 docker ps
 ```
 
 Перезапустите контейнер:
+
 ```bash
 docker-compose down
 docker-compose up -d
@@ -264,6 +271,7 @@ docker-compose up -d
 ### Ошибка подключения к БД
 
 Убедитесь, что PostgreSQL запущен и доступен на порту 5432:
+
 ```bash
 docker-compose ps
 ```
@@ -271,6 +279,7 @@ docker-compose ps
 ### Тесты падают
 
 Убедитесь, что Docker запущен (для Testcontainers):
+
 ```bash
 docker ps
 ```

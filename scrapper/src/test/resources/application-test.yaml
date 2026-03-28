@@ -4,13 +4,18 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: false
+    show-sql: true
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.xml
     enabled: true
+    drop-first: false
 
 app:
   scheduler:
     enabled: false
   database:
-    access-type: memory
+    access-type: jdbc
+
+logging:
+  level:
+    liquibase: DEBUG

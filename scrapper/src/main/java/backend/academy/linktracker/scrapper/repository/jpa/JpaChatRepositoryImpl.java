@@ -4,12 +4,18 @@ import backend.academy.linktracker.scrapper.entity.ChatEntity;
 import backend.academy.linktracker.scrapper.model.Chat;
 import backend.academy.linktracker.scrapper.repository.ChatRepository;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
+@Repository
+@ConditionalOnProperty(name = "app.database.access-type", havingValue = "jpa")
 public class JpaChatRepositoryImpl implements ChatRepository {
     private final JpaChatEntityRepository entityRepository;
+
+    public JpaChatRepositoryImpl(JpaChatEntityRepository entityRepository) {
+        this.entityRepository = entityRepository;
+    }
 
     @Override
     @Transactional
@@ -21,8 +27,9 @@ public class JpaChatRepositoryImpl implements ChatRepository {
     @Override
     @Transactional(readOnly = true)
     public Optional<Chat> findById(Long id) {
-        return entityRepository.findById(id)
-            .map(entity -> new Chat(entity.getId(), entity.getCreatedAt().toInstant()));
+        return entityRepository
+                .findById(id)
+                .map(entity -> new Chat(entity.getId(), entity.getCreatedAt().toInstant()));
     }
 
     @Override

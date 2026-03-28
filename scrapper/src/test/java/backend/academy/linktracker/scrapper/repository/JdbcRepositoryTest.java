@@ -1,5 +1,7 @@
 package backend.academy.linktracker.scrapper.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import backend.academy.linktracker.scrapper.BaseIntegrationTest;
 import backend.academy.linktracker.scrapper.model.Chat;
 import backend.academy.linktracker.scrapper.model.Link;
@@ -11,7 +13,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Import(JdbcTestConfiguration.class)
@@ -131,7 +132,8 @@ class JdbcRepositoryTest extends BaseIntegrationTest {
         Chat chat = new Chat(500L, java.time.Instant.now());
         chatRepository.save(chat);
 
-        Link link = new Link("https://github.com/tagged", java.util.Set.of("java", "spring"), java.time.Instant.now(), null);
+        Link link = new Link(
+                "https://github.com/tagged", java.util.Set.of("java", "spring"), java.time.Instant.now(), null);
         linkRepository.save(500L, link);
 
         var found = linkRepository.findByChatIdAndUrl(500L, "https://github.com/tagged");

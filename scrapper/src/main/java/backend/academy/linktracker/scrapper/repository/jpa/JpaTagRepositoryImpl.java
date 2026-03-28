@@ -4,12 +4,18 @@ import backend.academy.linktracker.scrapper.entity.TagEntity;
 import backend.academy.linktracker.scrapper.repository.TagRepository;
 import java.util.List;
 import java.util.Optional;
-import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
+@Repository
+@ConditionalOnProperty(name = "app.database.access-type", havingValue = "jpa")
 public class JpaTagRepositoryImpl implements TagRepository {
     private final JpaTagEntityRepository entityRepository;
+
+    public JpaTagRepositoryImpl(JpaTagEntityRepository entityRepository) {
+        this.entityRepository = entityRepository;
+    }
 
     @Override
     @Transactional
@@ -34,9 +40,7 @@ public class JpaTagRepositoryImpl implements TagRepository {
     @Override
     @Transactional(readOnly = true)
     public List<String> findAll() {
-        return entityRepository.findAll().stream()
-            .map(TagEntity::getName)
-            .toList();
+        return entityRepository.findAll().stream().map(TagEntity::getName).toList();
     }
 
     @Override

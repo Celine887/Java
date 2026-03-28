@@ -14,17 +14,9 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "links")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class LinkEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,23 +36,98 @@ public class LinkEntity {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "link_chat",
-        joinColumns = @JoinColumn(name = "link_id"),
-        inverseJoinColumns = @JoinColumn(name = "chat_id")
-    )
+            name = "link_chat",
+            joinColumns = @JoinColumn(name = "link_id"),
+            inverseJoinColumns = @JoinColumn(name = "chat_id"))
     private Set<ChatEntity> chats = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @ManyToMany(
+            fetch = FetchType.LAZY,
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
-        name = "link_tag",
-        joinColumns = @JoinColumn(name = "link_id"),
-        inverseJoinColumns = @JoinColumn(name = "tag_id")
-    )
+            name = "link_tag",
+            joinColumns = @JoinColumn(name = "link_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<TagEntity> tags = new HashSet<>();
+
+    public LinkEntity() {}
 
     public LinkEntity(String url) {
         this.url = url;
         this.lastCheckedAt = OffsetDateTime.now();
         this.createdAt = OffsetDateTime.now();
+    }
+
+    public LinkEntity(
+            Long id,
+            String url,
+            OffsetDateTime lastUpdatedAt,
+            OffsetDateTime lastCheckedAt,
+            OffsetDateTime createdAt,
+            Set<ChatEntity> chats,
+            Set<TagEntity> tags) {
+        this.id = id;
+        this.url = url;
+        this.lastUpdatedAt = lastUpdatedAt;
+        this.lastCheckedAt = lastCheckedAt;
+        this.createdAt = createdAt;
+        this.chats = chats;
+        this.tags = tags;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public OffsetDateTime getLastUpdatedAt() {
+        return lastUpdatedAt;
+    }
+
+    public void setLastUpdatedAt(OffsetDateTime lastUpdatedAt) {
+        this.lastUpdatedAt = lastUpdatedAt;
+    }
+
+    public OffsetDateTime getLastCheckedAt() {
+        return lastCheckedAt;
+    }
+
+    public void setLastCheckedAt(OffsetDateTime lastCheckedAt) {
+        this.lastCheckedAt = lastCheckedAt;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Set<ChatEntity> getChats() {
+        return chats;
+    }
+
+    public void setChats(Set<ChatEntity> chats) {
+        this.chats = chats;
+    }
+
+    public Set<TagEntity> getTags() {
+        return tags;
+    }
+
+    public void setTags(Set<TagEntity> tags) {
+        this.tags = tags;
     }
 }

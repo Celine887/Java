@@ -2,15 +2,16 @@ package backend.academy.linktracker.scrapper.client;
 
 import backend.academy.linktracker.scrapper.client.dto.GitHubRepositoryResponse;
 import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 @Component
-@Slf4j
 public class GitHubClient {
+    private static final Logger log = LoggerFactory.getLogger(GitHubClient.class);
 
     private final RestClient restClient;
 

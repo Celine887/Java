@@ -6,8 +6,8 @@ import backend.academy.linktracker.scrapper.dto.ListLinksResponse;
 import backend.academy.linktracker.scrapper.dto.RemoveLinkRequest;
 import backend.academy.linktracker.scrapper.service.LinkService;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,11 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/links")
-@RequiredArgsConstructor
-@Slf4j
 public class LinksController {
+    private static final Logger log = LoggerFactory.getLogger(LinksController.class);
 
     private final LinkService linkService;
+
+    public LinksController(LinkService linkService) {
+        this.linkService = linkService;
+    }
 
     @GetMapping
     public ResponseEntity<ListLinksResponse> getLinks(

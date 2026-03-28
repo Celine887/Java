@@ -6,20 +6,12 @@ import backend.academy.linktracker.scrapper.repository.jpa.JpaLinkEntityReposito
 import backend.academy.linktracker.scrapper.repository.jpa.JpaLinkRepositoryImpl;
 import backend.academy.linktracker.scrapper.repository.jpa.JpaTagEntityRepository;
 import backend.academy.linktracker.scrapper.repository.jpa.JpaTagRepositoryImpl;
-import javax.sql.DataSource;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 @TestConfiguration
 public class JpaTestConfiguration {
-
-    @Bean
-    @Primary
-    public JdbcTemplate jdbcTemplate(DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
 
     @Bean
     @Primary
@@ -30,10 +22,9 @@ public class JpaTestConfiguration {
     @Bean
     @Primary
     public LinkRepository linkRepository(
-        JpaLinkEntityRepository linkEntityRepository,
-        JpaChatEntityRepository chatEntityRepository,
-        JpaTagEntityRepository tagEntityRepository
-    ) {
+            JpaLinkEntityRepository linkEntityRepository,
+            JpaChatEntityRepository chatEntityRepository,
+            JpaTagEntityRepository tagEntityRepository) {
         return new JpaLinkRepositoryImpl(linkEntityRepository, chatEntityRepository, tagEntityRepository);
     }
 

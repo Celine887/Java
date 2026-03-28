@@ -10,39 +10,51 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
+@Repository
+@ConditionalOnProperty(name = "app.database.access-type", havingValue = "jpa")
 public class JpaLinkRepositoryImpl implements LinkRepository {
     private final JpaLinkEntityRepository linkEntityRepository;
     private final JpaChatEntityRepository chatEntityRepository;
     private final JpaTagEntityRepository tagEntityRepository;
 
+    public JpaLinkRepositoryImpl(
+            JpaLinkEntityRepository linkEntityRepository,
+            JpaChatEntityRepository chatEntityRepository,
+            JpaTagEntityRepository tagEntityRepository) {
+        this.linkEntityRepository = linkEntityRepository;
+        this.chatEntityRepository = chatEntityRepository;
+        this.tagEntityRepository = tagEntityRepository;
+    }
+
     @Override
     @Transactional
     public void save(Long chatId, Link link) {
-        ChatEntity chat = chatEntityRepository.findById(chatId)
-            .orElseThrow(() -> new IllegalArgumentException("Chat not found: " + chatId));
+        ChatEntity chat = chatEntityRepository
+                .findById(chatId)
+                .orElseThrow(() -> new IllegalArgumentException("Chat not found: " + chatId));
 
-        LinkEntity linkEntity = linkEntityRepository.findByUrl(link.url())
-            .orElseGet(() -> {
-                LinkEntity newLink = new LinkEntity(link.url());
-                if (link.lastUpdatedAt() != null) {
-                    newLink.setLastUpdatedAt(OffsetDateTime.ofInstant(link.lastUpdatedAt(), java.time.ZoneOffset.UTC));
-                }
-                newLink.setLastCheckedAt(OffsetDateTime.ofInstant(link.lastCheckedAt(), java.time.ZoneOffset.UTC));
-                return newLink;
-            });
+        LinkEntity linkEntity = linkEntityRepository.findByUrl(link.url()).orElseGet(() -> {
+            LinkEntity newLink = new LinkEntity(link.url());
+            if (link.lastUpdatedAt() != null) {
+                newLink.setLastUpdatedAt(OffsetDateTime.ofInstant(link.lastUpdatedAt(), java.time.ZoneOffset.UTC));
+            }
+            newLink.setLastCheckedAt(OffsetDateTime.ofInstant(link.lastCheckedAt(), java.time.ZoneOffset.UTC));
+            return newLink;
+        });
 
         linkEntity.getChats().add(chat);
 
         if (link.tags() != null && !link.tags().isEmpty()) {
             Set<TagEntity> tagEntities = link.tags().stream()
-                .map(tagName -> tagEntityRepository.findByName(tagName)
-                    .orElseGet(() -> tagEntityRepository.save(new TagEntity(tagName))))
-                .collect(Collectors.toSet());
+                    .map(tagName -> tagEntityRepository
+                            .findByName(tagName)
+                            .orElseGet(() -> tagEntityRepository.save(new TagEntity(tagName))))
+                    .collect(Collectors.toSet());
             linkEntity.getTags().addAll(tagEntities);
         }
 
@@ -52,27 +64,27 @@ public class JpaLinkRepositoryImpl implements LinkRepository {
     @Override
     @Transactional(readOnly = true)
     public Optional<Link> findByChatIdAndUrl(Long chatId, String url) {
-        return linkEntityRepository.findByUrl(url)
-            .filter(link -> link.getChats().stream().anyMatch(chat -> chat.getId().equals(chatId)))
-            .map(this::toModel);
+        return linkEntityRepository
+                .findByUrl(url)
+                .filter(link ->
+                        link.getChats().stream().anyMatch(chat -> chat.getId().equals(chatId)))
+                .map(this::toModel);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Link> findAllByChatId(Long chatId) {
-        return linkEntityRepository.findAllByChatId(chatId, PageRequest.of(0, 1000))
-            .stream()
-            .map(this::toModel)
-            .toList();
+        return linkEntityRepository.findAllByChatId(chatId, PageRequest.of(0, 1000)).stream()
+                .map(this::toModel)
+                .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Link> findAllByChatIdAndTag(Long chatId, String tag) {
-        return linkEntityRepository.findAllByChatIdAndTagName(chatId, tag, PageRequest.of(0, 1000))
-            .stream()
-            .map(this::toModel)
-            .toList();
+        return linkEntityRepository.findAllByChatIdAndTagName(chatId, tag, PageRequest.of(0, 1000)).stream()
+                .map(this::toModel)
+                .toList();
     }
 
     @Override
@@ -91,10 +103,9 @@ public class JpaLinkRepositoryImpl implements LinkRepository {
     @Override
     @Transactional(readOnly = true)
     public List<Link> findAllLinks() {
-        return linkEntityRepository.findAll(PageRequest.of(0, 10000))
-            .stream()
-            .map(this::toModel)
-            .toList();
+        return linkEntityRepository.findAll(PageRequest.of(0, 10000)).stream()
+                .map(this::toModel)
+                .toList();
     }
 
     @Override
@@ -116,14 +127,11 @@ public class JpaLinkRepositoryImpl implements LinkRepository {
     }
 
     private Link toModel(LinkEntity entity) {
-        Set<String> tags = entity.getTags().stream()
-            .map(TagEntity::getName)
-            .collect(Collectors.toSet());
+        Set<String> tags = entity.getTags().stream().map(TagEntity::getName).collect(Collectors.toSet());
         return new Link(
-            entity.getUrl(),
-            tags,
-            entity.getLastCheckedAt().toInstant(),
-            entity.getLastUpdatedAt() != null ? entity.getLastUpdatedAt().toInstant() : null
-        );
+                entity.getUrl(),
+                tags,
+                entity.getLastCheckedAt().toInstant(),
+                entity.getLastUpdatedAt() != null ? entity.getLastUpdatedAt().toInstant() : null);
     }
 }

@@ -1,7 +1,8 @@
 package backend.academy.linktracker.scrapper.client;
 
 import backend.academy.linktracker.scrapper.client.dto.LinkUpdateRequest;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatusCode;
@@ -10,8 +11,8 @@ import org.springframework.web.client.RestClient;
 
 @Component
 @Profile("!grpc")
-@Slf4j
 public class BotClient implements UpdateClient {
+    private static final Logger log = LoggerFactory.getLogger(BotClient.class);
 
     private final RestClient restClient;
 

@@ -1,8 +1,8 @@
 package backend.academy.linktracker.scrapper.controller;
 
 import backend.academy.linktracker.scrapper.service.ChatService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,11 +12,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/tg-chat")
-@RequiredArgsConstructor
-@Slf4j
 public class ChatController {
+    private static final Logger log = LoggerFactory.getLogger(ChatController.class);
 
     private final ChatService chatService;
+
+    public ChatController(ChatService chatService) {
+        this.chatService = chatService;
+    }
 
     @PostMapping("/{id}")
     public ResponseEntity<Void> registerChat(@PathVariable Long id) {

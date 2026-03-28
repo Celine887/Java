@@ -1,10 +1,11 @@
 package backend.academy.linktracker.scrapper.migration;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import backend.academy.linktracker.scrapper.BaseIntegrationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class MigrationTest extends BaseIntegrationTest {
 
@@ -50,45 +51,31 @@ class MigrationTest extends BaseIntegrationTest {
 
     private void assertTableExists(String tableName) {
         Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ?",
-            Integer.class,
-            tableName
-        );
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = ?", Integer.class, tableName);
         assertThat(count).isEqualTo(1);
     }
 
     private void assertIndexExists(String indexName) {
         Integer count = jdbcTemplate.queryForObject(
-            "SELECT COUNT(*) FROM pg_indexes WHERE indexname = ?",
-            Integer.class,
-            indexName
-        );
+                "SELECT COUNT(*) FROM pg_indexes WHERE indexname = ?", Integer.class, indexName);
         assertThat(count).isEqualTo(1);
     }
 
     private void assertPrimaryKeyExists(String tableName, String constraintName) {
-        Integer count = jdbcTemplate.queryForObject(
-            """
+        Integer count = jdbcTemplate.queryForObject("""
             SELECT COUNT(*)
             FROM information_schema.table_constraints
             WHERE table_name = ? AND constraint_type = 'PRIMARY KEY'
-            """,
-            Integer.class,
-            tableName
-        );
+            """, Integer.class, tableName);
         assertThat(count).isGreaterThan(0);
     }
 
     private void assertForeignKeyExists(String tableName, String columnName) {
-        Integer count = jdbcTemplate.queryForObject(
-            """
+        Integer count = jdbcTemplate.queryForObject("""
             SELECT COUNT(*)
             FROM information_schema.key_column_usage
             WHERE table_name = ? AND column_name = ?
-            """,
-            Integer.class,
-            tableName, columnName
-        );
+            """, Integer.class, tableName, columnName);
         assertThat(count).isGreaterThan(0);
     }
 }

@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class LinkService {
     private final ChatService chatService;
     private final LinkValidator linkValidator;
 
+    @Transactional
     public LinkResponse add(AddLinkRequest request) {
         if (!chatService.exists(request.chatId())) {
             throw new ChatNotFoundException(request.chatId());
@@ -47,6 +49,7 @@ public class LinkService {
         return new LinkResponse(link.url(), link.tags());
     }
 
+    @Transactional
     public LinkResponse remove(RemoveLinkRequest request) {
         if (!chatService.exists(request.chatId())) {
             throw new ChatNotFoundException(request.chatId());
@@ -60,6 +63,7 @@ public class LinkService {
         return new LinkResponse(link.url(), link.tags());
     }
 
+    @Transactional(readOnly = true)
     public ListLinksResponse listAll(Long chatId, String tag) {
         if (!chatService.exists(chatId)) {
             throw new ChatNotFoundException(chatId);

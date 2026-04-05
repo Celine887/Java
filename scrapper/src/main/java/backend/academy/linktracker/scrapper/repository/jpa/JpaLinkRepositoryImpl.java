@@ -109,6 +109,24 @@ public class JpaLinkRepositoryImpl implements LinkRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Link> findLinksForUpdate(int limit, java.time.Instant olderThan) {
+        OffsetDateTime threshold = OffsetDateTime.ofInstant(olderThan, java.time.ZoneOffset.UTC);
+        return linkEntityRepository.findLinksForUpdate(threshold, PageRequest.of(0, limit)).stream()
+                .map(this::toModel)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Link> findLinksForUpdate(int limit, int offset) {
+        int page = offset / limit;
+        return linkEntityRepository.findAllOrderByLastCheckedAt(PageRequest.of(page, limit)).stream()
+                .map(this::toModel)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public void updateLink(Link link) {
         linkEntityRepository.findByUrl(link.url()).ifPresent(entity -> {

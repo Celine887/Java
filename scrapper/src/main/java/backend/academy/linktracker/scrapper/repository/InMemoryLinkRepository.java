@@ -51,6 +51,36 @@ public class InMemoryLinkRepository implements LinkRepository {
     }
 
     @Override
+    public List<Link> findLinksForUpdate(int limit, java.time.Instant olderThan) {
+        return chatLinks.values().stream()
+                .flatMap(links -> links.values().stream())
+                .distinct()
+                .filter(link ->
+                        link.lastCheckedAt() == null || link.lastCheckedAt().isBefore(olderThan))
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
+    public List<Link> findLinksForUpdate(int limit, int offset) {
+        return chatLinks.values().stream()
+                .flatMap(links -> links.values().stream())
+                .distinct()
+                .sorted((a, b) -> {
+                    if (a.lastCheckedAt() == null) {
+                        return -1;
+                    }
+                    if (b.lastCheckedAt() == null) {
+                        return 1;
+                    }
+                    return a.lastCheckedAt().compareTo(b.lastCheckedAt());
+                })
+                .skip(offset)
+                .limit(limit)
+                .toList();
+    }
+
+    @Override
     public void updateLink(Link link) {
         chatLinks.values().forEach(links -> {
             if (links.containsKey(link.url())) {

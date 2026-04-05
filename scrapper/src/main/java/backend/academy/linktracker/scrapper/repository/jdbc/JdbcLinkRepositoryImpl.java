@@ -104,6 +104,29 @@ public class JdbcLinkRepositoryImpl implements LinkRepository {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<Link> findLinksForUpdate(int limit, java.time.Instant olderThan) {
+        return jdbcTemplate.query("""
+            SELECT DISTINCT url, last_updated_at, last_checked_at
+            FROM links
+            WHERE last_checked_at < ? OR last_checked_at IS NULL
+            ORDER BY last_checked_at ASC NULLS FIRST
+            LIMIT ?
+            """, (rs, rowNum) -> mapRowToLink(rs), Timestamp.from(olderThan), limit);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Link> findLinksForUpdate(int limit, int offset) {
+        return jdbcTemplate.query("""
+            SELECT DISTINCT url, last_updated_at, last_checked_at
+            FROM links
+            ORDER BY last_checked_at ASC NULLS FIRST
+            LIMIT ? OFFSET ?
+            """, (rs, rowNum) -> mapRowToLink(rs), limit, offset);
+    }
+
+    @Override
     @Transactional
     public void updateLink(Link link) {
         jdbcTemplate.update(

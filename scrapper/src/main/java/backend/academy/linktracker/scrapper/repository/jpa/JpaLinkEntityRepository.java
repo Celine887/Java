@@ -24,6 +24,13 @@ public interface JpaLinkEntityRepository extends JpaRepository<LinkEntity, Long>
     @Query("SELECT l FROM LinkEntity l WHERE l.lastCheckedAt < :threshold")
     List<LinkEntity> findLinksToCheck(@Param("threshold") OffsetDateTime threshold, Pageable pageable);
 
+    @Query(
+            "SELECT l FROM LinkEntity l WHERE l.lastCheckedAt < :threshold OR l.lastCheckedAt IS NULL ORDER BY l.lastCheckedAt ASC NULLS FIRST")
+    List<LinkEntity> findLinksForUpdate(@Param("threshold") OffsetDateTime threshold, Pageable pageable);
+
+    @Query("SELECT l FROM LinkEntity l ORDER BY l.lastCheckedAt ASC NULLS FIRST")
+    List<LinkEntity> findAllOrderByLastCheckedAt(Pageable pageable);
+
     @Query("SELECT c.id FROM LinkEntity l JOIN l.chats c WHERE l.url = :url")
     List<Long> findChatIdsByUrl(@Param("url") String url);
 }

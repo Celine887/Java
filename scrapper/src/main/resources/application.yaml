@@ -31,6 +31,9 @@ app:
   scheduler:
     enabled: true
     interval: 60s
+    batch-size: 1000
+    sub-batch-size: 250
+    thread-pool-size: 4
     force-check-delay: 10s
   bot-client:
     base-url: http://localhost:8080

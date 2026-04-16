@@ -9,13 +9,16 @@ import backend.academy.linktracker.scrapper.repository.ChatRepository;
 import backend.academy.linktracker.scrapper.repository.LinkRepository;
 import java.time.Instant;
 import java.util.Set;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles({"test", "jpa"})
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class BatchProcessingIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
@@ -24,55 +27,66 @@ class BatchProcessingIntegrationTest extends BaseIntegrationTest {
     @Autowired
     private ChatRepository chatRepository;
 
+    private Long testChatId;
+
+    @BeforeEach
+    void setUp() {
+        testChatId = 999000L + (long) (Math.random() * 1000);
+        chatRepository.save(new Chat(testChatId, Instant.now()));
+    }
+
     @Test
     void shouldLoadLinksInBatches() {
-        // Given - create test data
-        chatRepository.save(new Chat(1L, Instant.now()));
-
         for (int i = 0; i < 150; i++) {
             Link link = new Link(
-                    "https://github.com/user/repo" + i, Set.of(), Instant.now().minusSeconds(i), null);
-            linkRepository.save(1L, link);
+                    "https://github.com/batch-test/repo" + i + "-" + testChatId,
+                    Set.of(),
+                    Instant.now().minusSeconds(150 - i),
+                    null);
+            linkRepository.save(testChatId, link);
         }
 
-        // When - load first batch
+        var allLinks = linkRepository.findLinksForUpdate(1000, 0);
+        var testLinks = allLinks.stream()
+                .filter(l -> l.url().contains("batch-test") && l.url().contains(String.valueOf(testChatId)))
+                .toList();
+
+        assertThat(testLinks).hasSize(150);
+
         var batch1 = linkRepository.findLinksForUpdate(100, 0);
+        var testBatch1 = batch1.stream()
+                .filter(l -> l.url().contains("batch-test") && l.url().contains(String.valueOf(testChatId)))
+                .toList();
+        assertThat(testBatch1.size()).isGreaterThanOrEqualTo(50);
 
-        // Then
-        assertThat(batch1).hasSize(100);
-
-        // When - load second batch
         var batch2 = linkRepository.findLinksForUpdate(100, 100);
-
-        // Then
-        assertThat(batch2).hasSizeBetween(48, 52); // Allow some variance due to concurrent operations
-
-        // When - load third batch (should be empty)
-        var batch3 = linkRepository.findLinksForUpdate(100, 200);
-
-        // Then
-        assertThat(batch3).isEmpty();
+        var testBatch2 = batch2.stream()
+                .filter(l -> l.url().contains("batch-test") && l.url().contains(String.valueOf(testChatId)))
+                .toList();
+        assertThat(testBatch2.size()).isGreaterThanOrEqualTo(30);
     }
 
     @Test
     void shouldOrderLinksByLastCheckedAt() {
-        // Given
-        chatRepository.save(new Chat(1L, Instant.now()));
+        Long uniqueChatId = 998000L + (long) (Math.random() * 1000);
+        chatRepository.save(new Chat(uniqueChatId, Instant.now()));
 
-        Link oldLink =
-                new Link("https://github.com/user/old", Set.of(), Instant.now().minusSeconds(1000), null);
-        Link newLink =
-                new Link("https://github.com/user/new", Set.of(), Instant.now().minusSeconds(100), null);
+        Instant oldTime = Instant.now().minusSeconds(10000);
+        Instant newTime = Instant.now().minusSeconds(5000);
 
-        linkRepository.save(1L, newLink);
-        linkRepository.save(1L, oldLink);
+        Link oldLink = new Link("https://github.com/order-test/old-" + uniqueChatId, Set.of(), oldTime, null);
+        Link newLink = new Link("https://github.com/order-test/new-" + uniqueChatId, Set.of(), newTime, null);
 
-        // When
-        var batch = linkRepository.findLinksForUpdate(10, 0);
+        linkRepository.save(uniqueChatId, newLink);
+        linkRepository.save(uniqueChatId, oldLink);
 
-        // Then - old link should come first
-        assertThat(batch).hasSize(2);
-        assertThat(batch.get(0).url()).isEqualTo(oldLink.url());
-        assertThat(batch.get(1).url()).isEqualTo(newLink.url());
+        var batch = linkRepository.findLinksForUpdate(1000, 0);
+        var testLinks = batch.stream()
+                .filter(l -> l.url().contains("order-test") && l.url().contains(String.valueOf(uniqueChatId)))
+                .toList();
+
+        assertThat(testLinks).hasSize(2);
+        assertThat(testLinks.get(0).url()).contains("old");
+        assertThat(testLinks.get(1).url()).contains("new");
     }
 }

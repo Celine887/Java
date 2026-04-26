@@ -7,8 +7,10 @@
 - Java 21
 - Spring Boot 3.4.1
 - PostgreSQL 16
+- Apache Kafka 3.8.0 (KRaft mode)
 - Liquibase (миграции БД)
 - Spring Data JPA / JDBC
+- Spring Kafka
 - Telegram Bot API
 - gRPC
 - Docker & Docker Compose
@@ -40,13 +42,18 @@ TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 TELEGRAM_BOT_NAME=your_bot_name
 ```
 
-### 3. Запуск PostgreSQL
+### 3. Запуск инфраструктуры (PostgreSQL + Kafka)
 
 ```bash
 docker-compose up -d
 ```
 
-Это запустит PostgreSQL на порту 5432 с базой данных `link_tracker`.
+Это запустит:
+- PostgreSQL на порту 5432 с базой данных `link_tracker`
+- Kafka кластер из 3 брокеров (порты 9092, 9094, 9096)
+- Kafka UI на порту 8090 (http://localhost:8090)
+
+Дождитесь полного запуска Kafka (около 30-60 секунд). Проверить статус можно через Kafka UI.
 
 ### 4. Сборка проекта
 
@@ -99,6 +106,54 @@ spring:
     password: postgres
 ```
 
+### Настройка Kafka
+
+#### Выбор транспорта для уведомлений
+
+В файле `scrapper/src/main/resources/application.yaml`:
+
+```yaml
+app:
+  notification:
+    transport: kafka  # kafka (default), http, или grpc
+```
+
+Доступные варианты:
+- `kafka` - асинхронная отправка через Apache Kafka (рекомендуется, по умолчанию)
+- `http` - синхронная отправка через REST API
+- `grpc` - синхронная отправка через gRPC
+
+#### Конфигурация Kafka
+
+```yaml
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092,localhost:9094,localhost:9096
+    producer:
+      acks: all
+      retries: 3
+    consumer:
+      group-id: bot-consumer-group
+      auto-offset-reset: earliest
+
+app:
+  kafka:
+    topic:
+      link-updates: link-updates
+      link-updates-dlq: link-updates-dlq
+```
+
+#### Kafka Cluster
+
+Кластер состоит из:
+- 3 брокера Kafka (отказоустойчивость)
+- KRaft mode (без Zookeeper)
+- Топик `link-updates`: 3 партиции, replication factor 3
+- Топик `link-updates-dlq`: 1 партиция для failed messages
+- Kafka UI для мониторинга: http://localhost:8090
+
+Подробности конфигурации см. в [KAFKA_CONFIGURATION.md](KAFKA_CONFIGURATION.md)
+
 ### Настройка планировщика
 
 ```yaml
@@ -121,6 +176,33 @@ app:
 4. Изолирует ошибки - сбой одной ссылки не влияет на другие
 5. Логирует failed links для мониторинга
 
+## Тестирование
+
+### Запуск всех тестов
+
+```bash
+mvn clean test
+```
+
+### Интеграционный тест Scrapper → Kafka → Bot
+
+Для проверки полного пути сообщения запустите:
+
+```bash
+mvn test -pl scrapper -Dtest=ScrapperToKafkaToBotIntegrationTest
+```
+
+Этот тест:
+1. Запускает Kafka через Testcontainers
+2. Отправляет update через Scrapper
+3. Проверяет получение сообщения в Kafka
+4. Симулирует обработку Bot'ом
+
+### Тесты с Kafka
+
+Все тесты с Kafka используют Testcontainers и автоматически поднимают Kafka кластер.
+Первый запуск может занять время на скачивание Docker образа.
+
 ## Структура проекта
 
 ```
@@ -128,17 +210,26 @@ link-tracker/
 ├── bot/                    # Telegram бот
 │   └── src/
 │       ├── main/
+│       │   └── java/
+│       │       └── kafka/  # Kafka consumer
 │       └── test/
 ├── scrapper/              # Бэкенд сервис
 │   └── src/
 │       ├── main/
 │       │   ├── java/
+│       │   │   └── client/
+│       │   │       ├── KafkaUpdateClient.java  # Kafka producer
+│       │   │       ├── BotClient.java          # HTTP client
+│       │   │       └── GrpcUpdateClient.java   # gRPC client
 │       │   └── resources/
 │       │       └── db/
 │       │           └── changelog/  # Liquibase миграции
 │       └── test/
+│           └── integration/
+│               └── ScrapperToKafkaToBotIntegrationTest.java
 ├── migrations/            # SQL миграции (корневая папка)
-├── docker-compose.yml     # Docker Compose конфигурация
+├── docker-compose.yml     # Docker Compose (PostgreSQL + Kafka)
+├── KAFKA_CONFIGURATION.md # Обоснование настроек Kafka
 └── pom.xml               # Maven конфигурация
 ```
 

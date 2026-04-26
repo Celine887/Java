@@ -35,7 +35,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.wiremock.spring.EnableWireMock;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+    "spring.kafka.consumer.auto-offset-reset=earliest",
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
+})
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @EnableWireMock

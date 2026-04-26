@@ -10,23 +10,20 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 
-@Component
-@Profile("grpc")
 public class GrpcUpdateClient implements UpdateClient {
     private static final Logger log = LoggerFactory.getLogger(GrpcUpdateClient.class);
 
-    @Value("${app.bot.grpc.host:localhost}")
-    private String botHost;
-
-    @Value("${app.bot.grpc.port:9090}")
-    private int botPort;
+    private final String botHost;
+    private final int botPort;
 
     private ManagedChannel channel;
     private UpdateServiceGrpc.UpdateServiceBlockingStub stub;
+
+    public GrpcUpdateClient(String botHost, int botPort) {
+        this.botHost = botHost;
+        this.botPort = botPort;
+    }
 
     @PostConstruct
     public void init() {

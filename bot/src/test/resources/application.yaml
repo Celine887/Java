@@ -8,6 +8,8 @@ spring:
     bootstrap-servers: localhost:9092
     consumer:
       group-id: bot-test-group
+      properties:
+        schema.registry.url: http://localhost:8081
 
 app:
   idempotency:

@@ -63,3 +63,11 @@ app:
     base-url: https://api.github.com
   stackoverflow-client:
     base-url: https://api.stackexchange.com
+  valkey:
+    enabled: true
+    host: localhost
+    port: 6379
+    password:
+    ttl-seconds: 300
+    client-side-caching:
+      enabled: false

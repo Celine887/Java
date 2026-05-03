@@ -177,8 +177,104 @@ services:
       kafka-topics --bootstrap-server kafka-1:9092 --list
       "
 
+  valkey-node-1:
+    image: valkey/valkey:7.2-alpine
+    container_name: valkey-node-1
+    ports:
+      - "6379:6379"
+      - "16379:16379"
+    command: >
+      valkey-server
+      --port 6379
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfilename "appendonly.aof"
+      --dir /data
+    volumes:
+      - valkey_1_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-node-2:
+    image: valkey/valkey:7.2-alpine
+    container_name: valkey-node-2
+    ports:
+      - "6380:6379"
+      - "16380:16379"
+    command: >
+      valkey-server
+      --port 6379
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfilename "appendonly.aof"
+      --dir /data
+    volumes:
+      - valkey_2_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-node-3:
+    image: valkey/valkey:7.2-alpine
+    container_name: valkey-node-3
+    ports:
+      - "6381:6379"
+      - "16381:16379"
+    command: >
+      valkey-server
+      --port 6379
+      --cluster-enabled yes
+      --cluster-config-file nodes.conf
+      --cluster-node-timeout 5000
+      --appendonly yes
+      --appendfilename "appendonly.aof"
+      --dir /data
+    volumes:
+      - valkey_3_data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  valkey-cluster-init:
+    image: valkey/valkey:7.2-alpine
+    container_name: valkey-cluster-init
+    depends_on:
+      valkey-node-1:
+        condition: service_healthy
+      valkey-node-2:
+        condition: service_healthy
+      valkey-node-3:
+        condition: service_healthy
+    command: >
+      sh -c "
+      echo 'Waiting for Valkey nodes to be ready...'
+      sleep 5
+      echo 'Creating Valkey cluster...'
+      valkey-cli --cluster create 
+      valkey-node-1:6379 
+      valkey-node-2:6379 
+      valkey-node-3:6379 
+      --cluster-replicas 0 
+      --cluster-yes || echo 'Cluster already exists'
+      echo 'Valkey cluster initialized'
+      "
+
 volumes:
   postgres_data:
   kafka_1_data:
   kafka_2_data:
   kafka_3_data:
+  valkey_1_data:
+  valkey_2_data:
+  valkey_3_data:

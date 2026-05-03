@@ -50,10 +50,7 @@ public class KafkaConsumerConfiguration {
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
-        return new DefaultKafkaConsumerFactory<>(
-                config,
-                new StringDeserializer(),
-                new ErrorHandlingDeserializer<>(new KafkaAvroDeserializer()));
+        return new DefaultKafkaConsumerFactory<>(config);
     }
 
     @Bean

@@ -14,6 +14,8 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +28,7 @@ public class LinkService {
     private final LinkValidator linkValidator;
 
     @Transactional
+    @CacheEvict(value = "links", key = "#request.chatId()")
     public LinkResponse add(AddLinkRequest request) {
         if (!chatService.exists(request.chatId())) {
             throw new ChatNotFoundException(request.chatId());
@@ -50,6 +53,7 @@ public class LinkService {
     }
 
     @Transactional
+    @CacheEvict(value = "links", key = "#request.chatId()")
     public LinkResponse remove(RemoveLinkRequest request) {
         if (!chatService.exists(request.chatId())) {
             throw new ChatNotFoundException(request.chatId());
@@ -64,6 +68,7 @@ public class LinkService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "links", key = "#chatId")
     public ListLinksResponse listAll(Long chatId, String tag) {
         if (!chatService.exists(chatId)) {
             throw new ChatNotFoundException(chatId);

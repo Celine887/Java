@@ -81,7 +81,7 @@ class KafkaProducerTest {
         consumerProps.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
 
         DefaultKafkaConsumerFactory<String, LinkUpdateEvent> consumerFactory =
-                new DefaultKafkaConsumerFactory<>(consumerProps, new StringDeserializer(), new KafkaAvroDeserializer());
+                new DefaultKafkaConsumerFactory<>(consumerProps);
 
         ContainerProperties containerProperties = new ContainerProperties("link-updates");
         containerProperties.setMessageListener((MessageListener<String, LinkUpdateEvent>) records::add);

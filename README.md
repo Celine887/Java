@@ -8,6 +8,7 @@
 - Spring Boot 3.4.1
 - PostgreSQL 16
 - Apache Kafka 3.8.0 (KRaft mode)
+- Valkey 7.2 (Redis-compatible in-memory cache)
 - Liquibase (миграции БД)
 - Spring Data JPA / JDBC
 - Spring Kafka
@@ -153,6 +154,86 @@ app:
 - Kafka UI для мониторинга: http://localhost:8090
 
 Подробности конфигурации см. в [KAFKA_CONFIGURATION.md](KAFKA_CONFIGURATION.md)
+
+### Настройка Valkey (Redis-compatible cache)
+
+#### Включение кэширования
+
+В файле `scrapper/src/main/resources/application.yaml`:
+
+```yaml
+app:
+  valkey:
+    enabled: true
+    host: localhost
+    port: 6379
+    password:  # оставьте пустым для локальной разработки
+    ttl-seconds: 300  # время жизни кэша (5 минут)
+    client-side-caching:
+      enabled: false  # экспериментальная функция CSC
+```
+
+#### Запуск Valkey
+
+Valkey запускается автоматически через Docker Compose:
+
+```bash
+docker-compose up -d
+```
+
+Или вручную:
+
+```bash
+docker run --name valkey-standalone -p 6379:6379 valkey/valkey:7.2-alpine
+```
+
+#### Что кэшируется?
+
+- **GET /links** - список отслеживаемых ссылок пользователя
+- Ключ кэша: `Tg-Chat-Id` (ID чата пользователя)
+- Формат: JSON с полным списком ссылок и тегов
+- TTL: 300 секунд (5 минут)
+
+#### Инвалидация кэша
+
+Кэш автоматически инвалидируется при:
+- Добавлении новой ссылки (POST /links)
+- Удалении ссылки (DELETE /links)
+- Истечении TTL
+
+#### Client-Side Caching (CSC)
+
+CSC - это продвинутая функция Valkey/Redis, которая кэширует данные на стороне клиента (в памяти приложения) и автоматически инвалидирует их при изменении на сервере через CLIENT TRACKING protocol.
+
+**Преимущества CSC:**
+- Нулевая задержка для кэшированных данных (данные в памяти приложения)
+- Автоматическая инвалидация через Pub/Sub
+- Снижение сетевого трафика между приложением и Valkey
+- Дополнительное ускорение поверх обычного кэширования
+
+**Для включения CSC:**
+
+```yaml
+app:
+  valkey:
+    client-side-caching:
+      enabled: true
+```
+
+**Как это работает:**
+1. При первом запросе данные загружаются из Valkey и кэшируются локально
+2. Последующие запросы возвращаются мгновенно из локального кэша
+3. При изменении данных на сервере Valkey отправляет invalidation message
+4. Локальный кэш автоматически очищается
+5. Следующий запрос снова загружает свежие данные
+
+**Требования:**
+- Valkey 7.2+ или Redis 6.0+
+- Lettuce client с поддержкой CLIENT TRACKING
+- Два соединения: data connection + pub/sub connection
+
+**Graceful Degradation:**
+Если CLIENT TRACKING не поддерживается сервером, CSC автоматически переключается в manual mode с ручной инвалидацией при записи.
 
 ### Настройка планировщика
 
@@ -407,3 +488,49 @@ docker ps
 ## Лицензия
 
 Этот проект создан в образовательных целях.
+
+## Нагрузочное тестирование
+
+Проект включает полный набор для нагрузочного тестирования с Apache JMeter.
+
+### Быстрый старт
+
+1. Установите Apache JMeter 5.6.3+
+2. Сгенерируйте тестовые данные (100,000 ссылок):
+
+```bash
+psql -U postgres -d link_tracker -f load-testing/generate-test-data.sql
+```
+
+3. Запустите автоматизированные тесты:
+
+```powershell
+cd load-testing
+.\run-load-tests.ps1
+```
+
+Скрипт автоматически запустит два теста:
+- Тест БЕЗ кэширования
+- Тест С кэшированием Valkey
+
+### Результаты нагрузочного тестирования
+
+Подробные результаты и сравнение производительности см. в [load-testing/README.md](load-testing/README.md)
+
+#### Конфигурация тестов
+
+- **Concurrent Users**: 16 потоков (2 * CPU cores)
+- **Ramp-up Period**: 60 секунд
+- **Test Duration**: 300 секунд (5 минут)
+- **Operations Ratio**: 100:1 (GET:POST/DELETE)
+- **Test Data**: 1000 пользователей, 100,000 ссылок
+
+#### Ожидаемые улучшения с кэшем
+
+При использовании Valkey кэширования ожидается:
+- Увеличение RPS (requests per second) в 5-10 раз
+- Снижение среднего времени ответа на 80-90%
+- Снижение 99th percentile на 85-95%
+- Снижение нагрузки на PostgreSQL
+
+Точные результаты зависят от конфигурации системы и будут добавлены после выполнения тестов.

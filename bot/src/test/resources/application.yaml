@@ -1,0 +1,22 @@
+spring:
+  flyway:
+    enabled: false
+  datasource:
+    url: jdbc:tc:postgresql:16-alpine:///test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: bot-test-group
+
+app:
+  idempotency:
+    enabled: false
+  kafka:
+    topic:
+      link-updates: link-updates
+      link-updates-dlq: link-updates-dlq
+    retry:
+      max-attempts: 3
+      backoff-interval: 1000
+

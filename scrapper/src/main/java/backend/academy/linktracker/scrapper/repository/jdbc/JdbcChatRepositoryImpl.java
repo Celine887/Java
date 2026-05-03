@@ -22,8 +22,9 @@ public class JdbcChatRepositoryImpl implements ChatRepository {
     @Transactional
     public void save(Chat chat) {
         jdbcTemplate.update(
-                "INSERT INTO chats (id, created_at) VALUES (?, CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
-                chat.id());
+            "INSERT INTO chats (id, created_at) VALUES (?, CURRENT_TIMESTAMP) ON CONFLICT (id) DO NOTHING",
+            chat.id()
+        );
     }
 
     @Override
@@ -31,10 +32,13 @@ public class JdbcChatRepositoryImpl implements ChatRepository {
     public Optional<Chat> findById(Long id) {
         try {
             return jdbcTemplate.queryForObject(
-                    "SELECT id, created_at FROM chats WHERE id = ?",
-                    (rs, rowNum) -> Optional.of(new Chat(
-                            rs.getLong("id"), rs.getTimestamp("created_at").toInstant())),
-                    id);
+                "SELECT id, created_at FROM chats WHERE id = ?",
+                (rs, rowNum) -> Optional.of(new Chat(
+                    rs.getLong("id"),
+                    rs.getTimestamp("created_at").toInstant()
+                )),
+                id
+            );
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
@@ -43,7 +47,11 @@ public class JdbcChatRepositoryImpl implements ChatRepository {
     @Override
     @Transactional(readOnly = true)
     public boolean existsById(Long id) {
-        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM chats WHERE id = ?", Integer.class, id);
+        Integer count = jdbcTemplate.queryForObject(
+            "SELECT COUNT(*) FROM chats WHERE id = ?",
+            Integer.class,
+            id
+        );
         return count != null && count > 0;
     }
 

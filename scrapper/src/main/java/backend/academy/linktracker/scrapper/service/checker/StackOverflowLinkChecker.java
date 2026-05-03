@@ -51,13 +51,11 @@ public class StackOverflowLinkChecker implements LinkChecker {
         Long questionId = Long.parseLong(matcher.group(1));
         List<LinkUpdateInfo> updates = new ArrayList<>();
 
-        // Get question title for context
         String questionTitle = stackOverflowClient
                 .fetchQuestion(questionId)
                 .map(q -> q.title())
                 .orElse("Question #" + questionId);
 
-        // Check for new answers
         List<StackOverflowAnswerResponse.AnswerItem> answers =
                 stackOverflowClient.fetchAnswers(questionId, lastChecked);
         for (StackOverflowAnswerResponse.AnswerItem answer : answers) {
@@ -71,7 +69,6 @@ public class StackOverflowLinkChecker implements LinkChecker {
                     answerUrl));
         }
 
-        // Check for new comments
         List<StackOverflowCommentResponse.CommentItem> comments =
                 stackOverflowClient.fetchComments(questionId, lastChecked);
         for (StackOverflowCommentResponse.CommentItem comment : comments) {

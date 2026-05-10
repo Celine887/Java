@@ -31,6 +31,8 @@
             <Bug pattern="EI_EXPOSE_REP"/>
             <Bug pattern="EI_EXPOSE_REP2"/>
             <Bug pattern="DM_EXIT"/>
+            <Bug pattern="CRLF_INJECTION_LOGS"/>
+            <Bug pattern="VA_FORMAT_STRING_USES_NEWLINE"/>
         </Or>
     </Match>
     <!-- Kotlin edge cases -->
@@ -67,5 +69,20 @@
     <!-- JMH exclusions -->
     <Match>
         <Package name="~.*\.jmh_generated"/>
+    </Match>
+
+    <!-- Generated protobuf/gRPC files -->
+    <Match>
+        <Or>
+            <Package name="~.*\.grpc"/>
+            <Source name="~.*/java-generated/.*"/>
+            <Source name="~.*/java-generated-grpc/.*"/>
+        </Or>
+    </Match>
+
+    <!-- Spring JdbcTemplate manages PreparedStatement lifecycle automatically -->
+    <Match>
+        <Class name="backend.academy.linktracker.scrapper.repository.jdbc.JdbcLinkRepositoryImpl"/>
+        <Bug pattern="OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE"/>
     </Match>
 </FindBugsFilter>

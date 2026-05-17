@@ -208,6 +208,9 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>backend.academy.linktracker.ai.AiAgentApplication</mainClass>
+                </configuration>
             </plugin>
         </plugins>
     </build>

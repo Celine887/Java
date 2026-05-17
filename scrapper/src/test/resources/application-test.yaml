@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: scrapper-test
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+    drop-first: false
+
+app:
+  scheduler:
+    enabled: false
+  database:
+    access-type: jdbc
+  notification:
+    transport: http
+
+logging:
+  level:
+    liquibase: DEBUG

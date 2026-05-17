@@ -1,0 +1,31 @@
+{
+  "type": "record",
+  "name": "LinkUpdateEvent",
+  "namespace": "backend.academy.linktracker.avro",
+  "doc": "Event for link update notifications",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long",
+      "doc": "Link ID"
+    },
+    {
+      "name": "url",
+      "type": "string",
+      "doc": "Link URL"
+    },
+    {
+      "name": "description",
+      "type": "string",
+      "doc": "Update description"
+    },
+    {
+      "name": "tgChatIds",
+      "type": {
+        "type": "array",
+        "items": "long"
+      },
+      "doc": "Telegram chat IDs to notify"
+    }
+  ]
+}

@@ -35,7 +35,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.wiremock.spring.EnableWireMock;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+    "spring.kafka.consumer.auto-offset-reset=earliest",
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration"
+})
 @Import(TestcontainersConfiguration.class)
 @ActiveProfiles("test")
 @EnableWireMock
@@ -46,6 +49,13 @@ class TelegramBotIntegrationTest implements WithAssertions {
 
     @Autowired
     TelegramProperties telegramProperties;
+
+    @org.junit.jupiter.api.BeforeEach
+    void setUp() throws InterruptedException {
+        telegramBot.removeGetUpdatesListener();
+        com.github.tomakehurst.wiremock.client.WireMock.reset();
+        Thread.sleep(100); // Give time for background requests to stop
+    }
 
     @AfterEach
     void clearUpdatesListener() {

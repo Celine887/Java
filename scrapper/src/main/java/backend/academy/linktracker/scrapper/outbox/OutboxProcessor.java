@@ -1,6 +1,6 @@
 package backend.academy.linktracker.scrapper.outbox;
 
-import backend.academy.linktracker.avro.LinkUpdateEvent;
+
 import backend.academy.linktracker.scrapper.client.dto.LinkUpdateRequest;
 import backend.academy.linktracker.scrapper.entity.OutboxEventEntity;
 import backend.academy.linktracker.scrapper.repository.jdbc.JdbcOutboxEventRepository;
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OutboxProcessor {
 
     private final JdbcOutboxEventRepository outboxRepository;
-    private final KafkaTemplate<String, LinkUpdateEvent> kafkaTemplate;
+    private final KafkaTemplate<String, LinkUpdateRequest> kafkaTemplate;
     private final ObjectMapper objectMapper;
     private final String topicName = "link-updates";
     private static final int MAX_RETRY_COUNT = 3;
@@ -53,14 +53,7 @@ public class OutboxProcessor {
 
         LinkUpdateRequest request = objectMapper.readValue(event.getPayload(), LinkUpdateRequest.class);
 
-        LinkUpdateEvent avroEvent = LinkUpdateEvent.newBuilder()
-            .setId(request.id())
-            .setUrl(request.url())
-            .setDescription(request.description())
-            .setTgChatIds(request.tgChatIds())
-            .build();
-
-        kafkaTemplate.send(topicName, String.valueOf(request.id()), avroEvent).get();
+        kafkaTemplate.send(topicName, String.valueOf(request.id()), request).get();
 
         outboxRepository.updateProcessed(event.getId(), OffsetDateTime.now());
         log.info("Successfully processed outbox event: id={}", event.getId());

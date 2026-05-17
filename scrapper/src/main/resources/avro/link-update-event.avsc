@@ -20,6 +20,11 @@
       "doc": "Update description"
     },
     {
+      "name": "author",
+      "type": "string",
+      "doc": "Author of the update"
+    },
+    {
       "name": "tgChatIds",
       "type": {
         "type": "array",

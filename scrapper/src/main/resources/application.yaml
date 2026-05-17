@@ -33,7 +33,6 @@ spring:
       retries: 3
       properties:
         enable.idempotence: true
-        schema.registry.url: http://localhost:8081
 
 app:
   database:
@@ -51,7 +50,7 @@ app:
     poll-interval: 5000
   kafka:
     topic:
-      link-updates: link-updates
+      link-updates: link.raw-updates
       link-updates-dlq: link-updates-dlq
   bot-client:
     base-url: http://localhost:8080

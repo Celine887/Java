@@ -25,7 +25,6 @@ spring:
       enable-auto-commit: false
       properties:
         spring.json.trusted.packages: "*"
-        schema.registry.url: http://localhost:8081
 
 app:
   telegram:
@@ -35,7 +34,7 @@ app:
     debug: false
   kafka:
     topic:
-      link-updates: link-updates
+      link-updates: link.processed-updates
       link-updates-dlq: link-updates-dlq
     retry:
       max-attempts: 3

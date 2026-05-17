@@ -1,6 +1,6 @@
 package backend.academy.linktracker.bot.kafka;
 
-import backend.academy.linktracker.avro.LinkUpdateEvent;
+import backend.academy.linktracker.bot.dto.LinkProcessedUpdateEvent;
 import backend.academy.linktracker.bot.dto.LinkUpdateRequest;
 import backend.academy.linktracker.bot.service.IdempotencyService;
 import backend.academy.linktracker.bot.service.UpdateNotificationService;
@@ -26,7 +26,7 @@ public class KafkaUpdateConsumer {
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory")
     public void listen(
-            @Payload LinkUpdateEvent event,
+            @Payload LinkProcessedUpdateEvent event,
             @Header(KafkaHeaders.RECEIVED_TOPIC) String topic,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset) {
@@ -44,11 +44,11 @@ public class KafkaUpdateConsumer {
         }
 
         try {
-            // Convert Avro to DTO
+            // Convert to DTO
             LinkUpdateRequest update = new LinkUpdateRequest(
                     event.getId(),
-                    event.getUrl().toString(),
-                    event.getDescription().toString(),
+                    null, // URL not available in processed events
+                    event.getDescription(),
                     event.getTgChatIds());
 
             notificationService.sendNotifications(update);

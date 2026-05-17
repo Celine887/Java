@@ -1,8 +1,7 @@
 package backend.academy.linktracker.bot.configuration;
 
-import backend.academy.linktracker.avro.LinkUpdateEvent;
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import backend.academy.linktracker.bot.dto.LinkProcessedUpdateEvent;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -28,8 +27,7 @@ public class KafkaConsumerConfiguration {
     @Value("${spring.kafka.consumer.group-id}")
     private String groupId;
 
-    @Value("${spring.kafka.consumer.properties.schema.registry.url}")
-    private String schemaRegistryUrl;
+
 
     @Value("${app.kafka.retry.max-attempts:3}")
     private int maxAttempts;
@@ -38,15 +36,14 @@ public class KafkaConsumerConfiguration {
     private long backoffInterval;
 
     @Bean
-    public ConsumerFactory<String, LinkUpdateEvent> consumerFactory() {
+    public ConsumerFactory<String, LinkProcessedUpdateEvent> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, KafkaAvroDeserializer.class.getName());
-        config.put("schema.registry.url", schemaRegistryUrl);
-        config.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
+        config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class.getName());
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
@@ -54,9 +51,9 @@ public class KafkaConsumerConfiguration {
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, LinkUpdateEvent> kafkaListenerContainerFactory(
-            KafkaTemplate<String, LinkUpdateEvent> kafkaTemplate) {
-        ConcurrentKafkaListenerContainerFactory<String, LinkUpdateEvent> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, LinkProcessedUpdateEvent> kafkaListenerContainerFactory(
+            KafkaTemplate<String, LinkProcessedUpdateEvent> kafkaTemplate) {
+        ConcurrentKafkaListenerContainerFactory<String, LinkProcessedUpdateEvent> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.getContainerProperties()

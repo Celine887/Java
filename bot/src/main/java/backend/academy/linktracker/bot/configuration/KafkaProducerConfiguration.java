@@ -1,7 +1,7 @@
 package backend.academy.linktracker.bot.configuration;
 
-import backend.academy.linktracker.avro.LinkUpdateEvent;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import backend.academy.linktracker.bot.dto.LinkProcessedUpdateEvent;
+import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -20,16 +20,16 @@ public class KafkaProducerConfiguration {
     private String bootstrapServers;
 
     @Bean
-    public ProducerFactory<String, LinkUpdateEvent> producerFactory() {
+    public ProducerFactory<String, LinkProcessedUpdateEvent> producerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
         return new DefaultKafkaProducerFactory<>(config);
     }
 
     @Bean
-    public KafkaTemplate<String, LinkUpdateEvent> kafkaTemplate() {
+    public KafkaTemplate<String, LinkProcessedUpdateEvent> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }

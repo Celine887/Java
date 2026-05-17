@@ -1,8 +1,8 @@
 {
   "type": "record",
-  "name": "LinkUpdateEvent",
+  "name": "LinkProcessedUpdateEvent",
   "namespace": "backend.academy.linktracker.avro",
-  "doc": "Event for link update notifications",
+  "doc": "Processed event for link update notifications (output from AI Agent)",
   "fields": [
     {
       "name": "id",
@@ -10,14 +10,9 @@
       "doc": "Link ID"
     },
     {
-      "name": "url",
-      "type": "string",
-      "doc": "Link URL"
-    },
-    {
       "name": "description",
       "type": "string",
-      "doc": "Update description"
+      "doc": "Processed (possibly summarized) description"
     },
     {
       "name": "tgChatIds",
@@ -26,6 +21,11 @@
         "items": "long"
       },
       "doc": "Telegram chat IDs to notify"
+    },
+    {
+      "name": "priority",
+      "type": "string",
+      "doc": "Priority level (HIGH, MEDIUM, LOW)"
     }
   ]
 }

@@ -173,6 +173,24 @@ services:
         --config min.insync.replicas=2 \
         --config retention.ms=2592000000
       
+      echo 'Creating topic: link.raw-updates'
+      kafka-topics --bootstrap-server kafka-1:9092 --create --if-not-exists \
+        --topic link.raw-updates \
+        --partitions 3 \
+        --replication-factor 3 \
+        --config min.insync.replicas=2 \
+        --config retention.ms=604800000 \
+        --config segment.ms=86400000
+      
+      echo 'Creating topic: link.processed-updates'
+      kafka-topics --bootstrap-server kafka-1:9092 --create --if-not-exists \
+        --topic link.processed-updates \
+        --partitions 3 \
+        --replication-factor 3 \
+        --config min.insync.replicas=2 \
+        --config retention.ms=604800000 \
+        --config segment.ms=86400000
+      
       echo 'Topics created successfully'
       kafka-topics --bootstrap-server kafka-1:9092 --list
       "

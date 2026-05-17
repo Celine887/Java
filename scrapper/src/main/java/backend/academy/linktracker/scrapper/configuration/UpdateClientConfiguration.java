@@ -1,11 +1,11 @@
 package backend.academy.linktracker.scrapper.configuration;
 
-import backend.academy.linktracker.avro.LinkUpdateEvent;
 import backend.academy.linktracker.scrapper.client.BotClient;
 import backend.academy.linktracker.scrapper.client.GrpcUpdateClient;
 import backend.academy.linktracker.scrapper.client.KafkaUpdateClient;
 import backend.academy.linktracker.scrapper.client.OutboxUpdateClient;
 import backend.academy.linktracker.scrapper.client.UpdateClient;
+import backend.academy.linktracker.scrapper.client.dto.LinkUpdateRequest;
 import backend.academy.linktracker.scrapper.repository.jdbc.JdbcOutboxEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
@@ -27,7 +27,7 @@ public class UpdateClientConfiguration {
             @Value("${resilience4j.timelimiter.instances.botClient.timeout-duration:5s}") Duration timeout,
             CircuitBreakerRegistry circuitBreakerRegistry,
             RetryRegistry retryRegistry,
-            KafkaTemplate<String, LinkUpdateEvent> kafkaTemplate,
+            KafkaTemplate<String, LinkUpdateRequest> kafkaTemplate,
             @Value("${app.kafka.topic.link-updates}") String topicName) {
         
         UpdateClient fallbackClient = new KafkaUpdateClient(kafkaTemplate, topicName);
@@ -44,7 +44,7 @@ public class UpdateClientConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "app.notification", name = "transport", havingValue = "kafka")
     public UpdateClient kafkaUpdateClient(
-            KafkaTemplate<String, LinkUpdateEvent> kafkaTemplate,
+            KafkaTemplate<String, LinkUpdateRequest> kafkaTemplate,
             @Value("${app.kafka.topic.link-updates}") String topicName) {
         return new KafkaUpdateClient(kafkaTemplate, topicName);
     }

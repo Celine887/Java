@@ -21,7 +21,14 @@ class StackOverflowClientWireMockTest {
 
     @BeforeEach
     void setUp() {
-        stackOverflowClient = new StackOverflowClient("http://localhost:8090");
+        var circuitBreakerRegistry = io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults();
+        var retryRegistry = io.github.resilience4j.retry.RetryRegistry.ofDefaults();
+        stackOverflowClient = new StackOverflowClient(
+                "http://localhost:8090",
+                java.time.Duration.ofSeconds(5),
+                circuitBreakerRegistry,
+                retryRegistry
+        );
     }
 
     @Test

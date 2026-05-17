@@ -21,7 +21,14 @@ class GitHubClientWireMockTest {
 
     @BeforeEach
     void setUp() {
-        gitHubClient = new GitHubClient("http://localhost:8089");
+        var circuitBreakerRegistry = io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry.ofDefaults();
+        var retryRegistry = io.github.resilience4j.retry.RetryRegistry.ofDefaults();
+        gitHubClient = new GitHubClient(
+                "http://localhost:8089",
+                java.time.Duration.ofSeconds(5),
+                circuitBreakerRegistry,
+                retryRegistry
+        );
     }
 
     @Test

@@ -32,6 +32,19 @@ app:
     summarization:
       threshold: 500
       mode: stub # stub or ai-api
+    prioritization:
+      high-keywords:
+        - critical
+        - urgent
+        - breaking
+        - security
+      low-keywords:
+        - minor
+        - typo
+        - chore
+        - docs
+    grouping:
+      window-ms: 30000
 
 logging:
   level:

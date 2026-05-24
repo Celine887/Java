@@ -103,7 +103,7 @@ class SummarizationServiceTest {
 
         // Then
         assertThat(result).isNotEqualTo(text);
-        // Should fall back to stub
+
         assertThat(result).contains("...");
     }
 

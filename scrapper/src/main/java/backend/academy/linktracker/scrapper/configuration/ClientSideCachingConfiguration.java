@@ -18,18 +18,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * Configuration for Redis/Valkey Client-Side Caching (CSC).
- * CSC reduces network traffic by maintaining a local cache on the client side
- * and receiving invalidation notifications from the server via CLIENT TRACKING.
- * 
- * This implementation uses two Redis connections:
- * 1. Data connection - for normal Redis operations (GET, SET, etc.)
- * 2. Pub/Sub connection - for receiving invalidation notifications
- * 
- * When a key is modified on the server, Redis sends an invalidation message
- * to the pub/sub connection, which removes the key from the local cache.
- */
 @Slf4j
 @Configuration
 @ConditionalOnProperty(prefix = "app.valkey.client-side-caching", name = "enabled", havingValue = "true")
@@ -44,7 +32,6 @@ public class ClientSideCachingConfiguration {
         log.info("Initializing Client-Side Caching for Valkey");
         
         try {
-            // Create Redis URI
             RedisURI redisUri = RedisURI.builder()
                 .withHost(properties.host())
                 .withPort(properties.port())
@@ -54,16 +41,12 @@ public class ClientSideCachingConfiguration {
                 redisUri.setPassword(properties.password().toCharArray());
             }
 
-            // Create Redis client
             this.redisClient = RedisClient.create(redisUri);
             
-            // Create data connection
             this.dataConnection = redisClient.connect();
             
-            // Create pub/sub connection for invalidation messages
             this.pubSubConnection = redisClient.connectPubSub();
             
-            // Create and setup client-side cache
             ClientSideCache cache = new ClientSideCache(dataConnection, pubSubConnection);
             cache.setupTracking();
             
@@ -92,11 +75,6 @@ public class ClientSideCachingConfiguration {
             log.warn("Error during Client-Side Caching cleanup: {}", e.getMessage());
         }
     }
-
-    /**
-     * Client-Side Cache implementation using Redis CLIENT TRACKING protocol.
-     * Maintains a local cache and listens for invalidation messages via Pub/Sub.
-     */
     @Slf4j
     public static class ClientSideCache {
         private final StatefulRedisConnection<String, String> dataConnection;
@@ -111,21 +89,14 @@ public class ClientSideCachingConfiguration {
             this.dataConnection = dataConnection;
             this.pubSubConnection = pubSubConnection;
         }
-
-        /**
-         * Setup CLIENT TRACKING for automatic cache invalidation.
-         * Uses RESP2 compatible approach with Pub/Sub for invalidation messages.
-         */
         public void setupTracking() {
             try {
                 log.debug("Setting up CLIENT TRACKING...");
                 
-                // Subscribe to invalidation channel
                 RedisPubSubCommands<String, String> pubsub = pubSubConnection.sync();
                 pubsub.subscribe("__redis__:invalidate");
                 log.debug("Subscribed to __redis__:invalidate channel");
 
-                // Add listener for invalidation messages
                 pubSubConnection.addListener(new RedisPubSubAdapter<String, String>() {
                     @Override
                     public void message(String channel, String key) {
@@ -138,12 +109,9 @@ public class ClientSideCachingConfiguration {
                     }
                 });
 
-                // Get pub/sub client ID for redirect
                 Long pubSubClientId = pubSubConnection.sync().clientId();
                 log.debug("Pub/Sub client ID: {}", pubSubClientId);
                 
-                // Enable CLIENT TRACKING with redirect to pub/sub connection
-                // This tells Redis to send invalidation messages to the pub/sub connection
                 try {
                     dataConnection.sync().dispatch(
                         CommandType.CLIENT,
@@ -166,19 +134,13 @@ public class ClientSideCachingConfiguration {
             }
         }
 
-        /**
-         * Get value from local cache or fetch from Redis if not cached.
-         * Automatically registers the key for tracking if CLIENT TRACKING is enabled.
-         */
         public String get(String key) {
-            // Check local cache first
             String cached = localCache.get(key);
             if (cached != null) {
                 log.debug("CSC HIT: {}", key);
                 return cached;
             }
 
-            // Fetch from Redis
             String value = dataConnection.sync().get(key);
             if (value != null) {
                 localCache.put(key, value);
@@ -189,61 +151,41 @@ public class ClientSideCachingConfiguration {
             return value;
         }
 
-        /**
-         * Set value in Redis. The local cache is immediately invalidated
-         * to ensure consistency.
-         */
+    
         public void set(String key, String value) {
             dataConnection.sync().set(key, value);
-            // Always invalidate local cache immediately to ensure consistency
             localCache.remove(key);
             log.debug("CSC SET: {}", key);
         }
 
-        /**
-         * Delete key from Redis. The local cache is immediately invalidated.
-         */
+    
         public void delete(String key) {
             dataConnection.sync().del(key);
-            // Always invalidate local cache immediately to ensure consistency
             localCache.remove(key);
             log.debug("CSC DELETE: {}", key);
         }
 
-        /**
-         * Get current size of local cache.
-         */
         public int getCacheSize() {
             return localCache.size();
         }
 
-        /**
-         * Clear local cache.
-         */
         public void clearLocalCache() {
             int size = localCache.size();
             localCache.clear();
             log.debug("CSC: Local cache cleared ({} entries removed)", size);
         }
 
-        /**
-         * Check if CLIENT TRACKING is enabled.
-         */
         public boolean isTrackingEnabled() {
             return trackingEnabled;
         }
 
-        /**
-         * Get cache statistics.
-         */
+ 
         public CacheStats getStats() {
             return new CacheStats(localCache.size(), trackingEnabled);
         }
     }
 
-    /**
-     * Cache statistics record.
-     */
+
     public record CacheStats(int localCacheSize, boolean trackingEnabled) {
     }
 }

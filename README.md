@@ -18,6 +18,47 @@
 - Testcontainers
 - Maven 3.9.11
 
+## Архитектура
+
+Проект состоит из трех основных сервисов:
+
+```
+Scrapper Service → Kafka (link.raw-updates) → AI Agent Service → Kafka (link.processed-updates) → Bot Service → Telegram API
+```
+
+### AI Agent Service (HW-9)
+
+AI Agent Service - промежуточный сервис для интеллектуальной обработки обновлений:
+
+**Функции:**
+1. **Фильтрация** - отсеивает spam, короткие сообщения, исключенных авторов
+2. **Суммаризация** - сокращает длинные описания (>500 символов)
+3. **Приоритизация** - определяет важность (HIGH/MEDIUM/LOW) по ключевым словам
+4. **Группировка** - объединяет связанные обновления в одно сообщение
+
+**Конфигурация** (`ai-agent/src/main/resources/application.yaml`):
+
+```yaml
+app:
+  ai-agent:
+    filtering:
+      stop-words: [spam, ads, promo]
+      excluded-authors: [bot-user]
+      min-length: 20
+    summarization:
+      threshold: 500
+      mode: stub  # stub или ai-api
+    prioritization:
+      high-keywords: [critical, urgent, breaking, security]
+      low-keywords: [minor, typo, chore, docs]
+    grouping:
+      window-ms: 30000  # 30 секунд
+```
+
+**Топики Kafka:**
+- Входной: `link.raw-updates` (от Scrapper)
+- Выходной: `link.processed-updates` (к Bot)
+
 ## Требования
 
 - Java 21+
@@ -72,6 +113,14 @@ mvn spring-boot:run -pl scrapper
 
 Scrapper будет доступен на `http://localhost:8081`
 
+#### Запуск AI Agent (обработка обновлений)
+
+```bash
+mvn spring-boot:run -pl ai-agent
+```
+
+AI Agent будет доступен на `http://localhost:8082`
+
 #### Запуск Bot (Telegram бот)
 
 ```bash
@@ -79,6 +128,12 @@ mvn spring-boot:run -pl bot
 ```
 
 Bot будет доступен на `http://localhost:8080`
+
+**Порядок запуска:**
+1. Сначала запустите инфраструктуру (PostgreSQL + Kafka)
+2. Затем Scrapper
+3. Затем AI Agent
+4. И наконец Bot
 
 ## Конфигурация
 
@@ -308,9 +363,33 @@ link-tracker/
 │       └── test/
 │           └── integration/
 │               └── ScrapperToKafkaToBotIntegrationTest.java
+├── ai-agent/              # AI Agent сервис (HW-9)
+│   └── src/
+│       ├── main/
+│       │   ├── java/
+│       │   │   ├── service/
+│       │   │   │   ├── FilteringService.java       # Фильтрация
+│       │   │   │   ├── SummarizationService.java   # Суммаризация
+│       │   │   │   ├── PrioritizationService.java  # Приоритизация
+│       │   │   │   └── GroupingService.java        # Группировка
+│       │   │   ├── kafka/
+│       │   │   │   └── AiAgentKafkaConsumer.java   # Kafka consumer/producer
+│       │   │   └── model/
+│       │   │       ├── LinkRawUpdateEvent.java     # Входное событие
+│       │   │       ├── LinkProcessedUpdateEvent.java # Выходное событие
+│       │   │       └── Priority.java               # HIGH/MEDIUM/LOW
+│       │   └── resources/
+│       │       └── application.yaml  # Конфигурация AI Agent
+│       └── test/
+│           ├── service/
+│           │   ├── PrioritizationServiceTest.java  # Unit-тесты
+│           │   └── GroupingServiceTest.java        # Unit-тесты
+│           └── integration/
+│               └── KafkaIntegrationTest.java       # Integration-тесты
 ├── migrations/            # SQL миграции (корневая папка)
 ├── docker-compose.yml     # Docker Compose (PostgreSQL + Kafka)
 ├── KAFKA_CONFIGURATION.md # Обоснование настроек Kafka
+├── MR_CHECKLIST.md        # Чек-лист для Merge Request
 └── pom.xml               # Maven конфигурация
 ```
 
@@ -384,7 +463,7 @@ Content-Type: application/json
 ### Запуск всех тестов
 
 ```bash
-mvn test
+mvn clean test
 ```
 
 ### Запуск тестов конкретного модуля
@@ -392,16 +471,49 @@ mvn test
 ```bash
 mvn test -pl scrapper
 mvn test -pl bot
+mvn test -pl ai-agent
 ```
 
-### Запуск конкретного теста
+### AI Agent тесты
+
+#### Unit-тесты
 
 ```bash
-mvn test -Dtest=JdbcRepositoryTest
-mvn test -Dtest=JpaRepositoryTest
+# Тесты приоритизации
+mvn test -pl ai-agent -Dtest=PrioritizationServiceTest
+
+# Тесты группировки
+mvn test -pl ai-agent -Dtest=GroupingServiceTest
 ```
 
-Тесты используют Testcontainers для автоматического запуска PostgreSQL в Docker.
+#### Integration-тесты с Kafka
+
+```bash
+mvn test -pl ai-agent -Dtest=KafkaIntegrationTest
+```
+
+Тесты проверяют:
+- TC-3.1: Успешную публикацию с HIGH/MEDIUM/LOW приоритетом
+- TC-3.2: Фильтрацию spam, коротких сообщений, исключенных авторов
+
+### Интеграционный тест Scrapper → Kafka → Bot
+
+Для проверки полного пути сообщения запустите:
+
+```bash
+mvn test -pl scrapper -Dtest=ScrapperToKafkaToBotIntegrationTest
+```
+
+Этот тест:
+1. Запускает Kafka через Testcontainers
+2. Отправляет update через Scrapper
+3. Проверяет получение сообщения в Kafka
+4. Симулирует обработку Bot'ом
+
+### Тесты с Kafka
+
+Все тесты с Kafka используют Testcontainers и автоматически поднимают Kafka кластер.
+Первый запуск может занять время на скачивание Docker образа.
 
 ## Команды бота
 
@@ -436,9 +548,10 @@ mvn test -Dtest=JpaRepositoryTest
 
 ### Запуск из IDE
 
-1. Запустите PostgreSQL через Docker Compose
+1. Запустите PostgreSQL и Kafka через Docker Compose
 2. Запустите `ScrapperApplication` (порт 8081)
-3. Запустите `BotApplication` (порт 8080)
+3. Запустите `AiAgentApplication` (порт 8082)
+4. Запустите `BotApplication` (порт 8080)
 
 ### Переключение между JDBC и JPA
 

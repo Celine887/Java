@@ -1,0 +1,4 @@
+backend\academy\linktracker\scrapper\ScrapperApplication.class
+backend\academy\linktracker\scrapper\properties\GithubProperties.class
+META-INF\spring-configuration-metadata.json
+backend\academy\linktracker\scrapper\properties\StackoverflowProperties.class

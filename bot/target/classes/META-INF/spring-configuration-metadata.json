@@ -1,0 +1,35 @@
+{
+  "groups": [
+    {
+      "name": "app.telegram",
+      "type": "backend.academy.linktracker.bot.properties.TelegramProperties",
+      "sourceType": "backend.academy.linktracker.bot.properties.TelegramProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "app.telegram.debug",
+      "type": "java.lang.Boolean",
+      "sourceType": "backend.academy.linktracker.bot.properties.TelegramProperties"
+    },
+    {
+      "name": "app.telegram.token",
+      "type": "java.lang.String",
+      "sourceType": "backend.academy.linktracker.bot.properties.TelegramProperties"
+    },
+    {
+      "name": "app.telegram.update-listener-sleep",
+      "type": "java.time.Duration",
+      "sourceType": "backend.academy.linktracker.bot.properties.TelegramProperties"
+    },
+    {
+      "name": "app.telegram.url",
+      "type": "java.lang.String",
+      "sourceType": "backend.academy.linktracker.bot.properties.TelegramProperties"
+    }
+  ],
+  "hints": [],
+  "ignored": {
+    "properties": []
+  }
+}

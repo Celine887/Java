@@ -1,0 +1,4 @@
+backend\academy\linktracker\bot\properties\TelegramProperties.class
+META-INF\spring-configuration-metadata.json
+backend\academy\linktracker\bot\BotApplication.class
+backend\academy\linktracker\bot\configuration\TelegramConfiguration.class

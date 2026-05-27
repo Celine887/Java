@@ -1,0 +1,13 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: scrapper
+
+app:
+  stackoverflow:
+    key: ${STACKOVERFLOW_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
+    access-token: ${STACKOVERFLOW_ACCESS_KEY} # Use env variable. DO NOT KEEP TOKEN HERE
+  github:
+    token: ${GITHUB_TOKEN} # Use env variable. DO NOT KEEP TOKEN HERE

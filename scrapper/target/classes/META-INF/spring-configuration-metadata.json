@@ -1,0 +1,35 @@
+{
+  "groups": [
+    {
+      "name": "app.github",
+      "type": "backend.academy.linktracker.scrapper.properties.GithubProperties",
+      "sourceType": "backend.academy.linktracker.scrapper.properties.GithubProperties"
+    },
+    {
+      "name": "app.stackoverflow",
+      "type": "backend.academy.linktracker.scrapper.properties.StackoverflowProperties",
+      "sourceType": "backend.academy.linktracker.scrapper.properties.StackoverflowProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "app.github.token",
+      "type": "java.lang.String",
+      "sourceType": "backend.academy.linktracker.scrapper.properties.GithubProperties"
+    },
+    {
+      "name": "app.stackoverflow.access-token",
+      "type": "java.lang.String",
+      "sourceType": "backend.academy.linktracker.scrapper.properties.StackoverflowProperties"
+    },
+    {
+      "name": "app.stackoverflow.key",
+      "type": "java.lang.String",
+      "sourceType": "backend.academy.linktracker.scrapper.properties.StackoverflowProperties"
+    }
+  ],
+  "hints": [],
+  "ignored": {
+    "properties": []
+  }
+}

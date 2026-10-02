@@ -160,7 +160,8 @@ public class LinkUpdateService {
 
         String description = updateInfo.formatMessage();
         LinkUpdateRequest request =
-                new LinkUpdateRequest(generateId(updateInfo.url()), updateInfo.url(), description, chatIds);
+                new LinkUpdateRequest(
+                        generateId(updateInfo.url()), updateInfo.url(), description, "System", chatIds);
 
         try {
             updateClient.sendUpdate(request);

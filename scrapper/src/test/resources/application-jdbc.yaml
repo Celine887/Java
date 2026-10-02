@@ -1,5 +1,0 @@
-app:
-  database:
-    access-type: jdbc
-  scheduler:
-    enabled: false

@@ -25,9 +25,6 @@
     </developers>
 
     <modules>
-        <module>ai-agent</module>
-        <module>bot</module>
-        <module>build-report-aggregate</module>
         <module>scrapper</module>
     </modules>
 
